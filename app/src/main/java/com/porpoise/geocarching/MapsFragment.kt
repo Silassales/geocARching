@@ -1,17 +1,18 @@
 package com.porpoise.geocarching
 
 import android.content.Context
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.os.Looper
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.LatLng
 
 /**
  * A simple [Fragment] subclass.
@@ -21,29 +22,75 @@ private const val ARG_PARAM2 = "param2"
  * Use the [MapsFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class MapsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-    private var listener: OnFragmentInteractionListener? = null
+class MapsFragment : Fragment(), OnMapReadyCallback {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+
+    private var listener: OnFragmentInteractionListener? = null
+    private val locationUpdateInterval = 5 * 1000 // 5 secs
+    private val locationUpdateFastestInterval = 1000 // 1 sec
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private var locationCallback: LocationCallback? = null
+    private var mMap: GoogleMap? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_maps, container, false)
+        val view: View = inflater.inflate(R.layout.fragment_maps, container, false)
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(view.context)
+
+        val mapsFragment = childFragmentManager.findFragmentById(R.id.main_map_fragment) as? SupportMapFragment ?: throw IllegalStateException("Map Fragment null onCreateView")
+
+        mapsFragment.getMapAsync(this)
+
+        return view
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-        listener?.onFragmentInteraction(uri)
+    override fun onResume() {
+        super.onResume()
+
+        startLocationTracking()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        // we don't want to be update the user location if they close the app
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+    }
+
+    override fun onMapReady(googleMap: GoogleMap?) {
+        googleMap?.run {
+            mMap = googleMap
+            mMap?.setMinZoomPreference(17.0f)
+
+            startLocationTracking()
+        }
+    }
+
+    private fun startLocationTracking() {
+        mMap ?: Log.e("UpdateMapLocation", "null mMap")
+        mMap?.isMyLocationEnabled = true
+
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: Log.e("startLocationTracking", "null locationResult")
+                locationResult ?: return
+
+                updateMapLocation(locationResult.lastLocation)
+            }
+        }
+
+        val locationRequest: LocationRequest = LocationRequest.create()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = locationUpdateInterval.toLong()
+        locationRequest.fastestInterval = locationUpdateFastestInterval.toLong()
+
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+    }
+
+    private fun updateMapLocation(location: Location) {
+        mMap ?: Log.e("UpdateMapLocation", "null mMap")
+        mMap?.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
     }
 
     override fun onAttach(context: Context) {
@@ -51,7 +98,7 @@ class MapsFragment : Fragment() {
         if (context is OnFragmentInteractionListener) {
             listener = context
         } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
+            throw RuntimeException("$context must implement OnFragmentInteractionListener")
         }
     }
 
@@ -76,23 +123,4 @@ class MapsFragment : Fragment() {
         fun onFragmentInteraction(uri: Uri)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MapsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-                MapsFragment().apply {
-                    arguments = Bundle().apply {
-                        putString(ARG_PARAM1, param1)
-                        putString(ARG_PARAM2, param2)
-                    }
-                }
-    }
 }
