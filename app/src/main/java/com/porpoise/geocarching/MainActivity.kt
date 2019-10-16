@@ -16,6 +16,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Log
 
 
@@ -53,7 +54,19 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        val floatingActionButton : FloatingActionButton = findViewById(R.id.fab);
+        //Collections are tables, documents are entries
+        val db = FirebaseFirestore.getInstance()
+        val profiles = db.collection("profiles")
+        //val profile = hashMapOf("name" to "Aaron", "num_caches" to 0)
+        //profiles.document("document_title").set(profile)
+        //val acquired_profile = profiles.get("document_title")
+        profiles.get().addOnSuccessListener(){ result ->
+            for(document in result) {
+                Log.d("TESTTAG", "${document.id} => ${document.data}")
+            }
+        }
+
+        val floatingActionButton : FloatingActionButton = findViewById(R.id.fab)
 
         floatingActionButton.setOnClickListener{
             navController.navigate(R.id.AR)
