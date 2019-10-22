@@ -1,14 +1,236 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".NavUI.Profile">
+    android:layout_height="match_parent" >
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        tools:context=".NavUI.Profile">
 
-</FrameLayout>
+        <RelativeLayout
+            android:id="@+id/relative_usr_img"
+            android:layout_width="match_parent"
+            android:background="@drawable/grad"
+            android:padding="12dp"
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:id="@+id/imgUser"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/circle_border">
+
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_margin="5dp"
+                    android:adjustViewBounds="true"
+                    android:background="@drawable/circle"
+                    android:padding="13dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/prof_pic"/>
+
+            </RelativeLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/imgUser"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="User's Name"
+                android:textSize="32sp"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/usernameView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/relative_usr_img"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:orientation="horizontal">
+
+            <View android:id="@+id/strut"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_centerHorizontal="true"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignRight="@id/strut"
+                android:layout_alignParentLeft="true"
+                android:text="Username"
+                android:textSize="26sp"/>
+            <TextView
+                android:id="@+id/username2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/strut"
+                android:layout_alignParentRight="true"
+                android:text="Username"
+                android:textSize="26sp"/>
+
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/viewsep1"
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/usernameView"
+            android:layout_marginTop="20dp"
+            android:background="#ff9703" />
+
+        <RelativeLayout
+            android:id="@+id/emailView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/viewsep1"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:orientation="horizontal">
+
+            <View android:id="@+id/strut2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_centerHorizontal="true"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignRight="@id/strut2"
+                android:layout_alignParentLeft="true"
+                android:text="Email"
+                android:textSize="26sp"/>
+            <TextView
+                android:id="@+id/email2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/strut2"
+                android:layout_alignParentRight="true"
+                android:text="Email"
+                android:textSize="26sp"/>
+
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/viewsep2"
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/emailView"
+            android:layout_marginTop="20dp"
+            android:background="#ff9703" />
+
+        <RelativeLayout
+            android:id="@+id/LocationView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/viewsep2"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:orientation="horizontal">
+
+            <View android:id="@+id/strut3"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_centerHorizontal="true"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignRight="@id/strut3"
+                android:layout_alignParentLeft="true"
+                android:text="Location"
+                android:textSize="26sp"/>
+            <TextView
+                android:id="@+id/location2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/strut3"
+                android:layout_alignParentRight="true"
+                android:text="Location"
+                android:textSize="26sp"/>
+
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/viewsep3"
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/LocationView"
+            android:layout_marginTop="20dp"
+            android:background="#ff9703" />
+
+        <RelativeLayout
+            android:id="@+id/passwordView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/viewsep3"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:orientation="horizontal">
+
+            <View android:id="@+id/strut4"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_centerHorizontal="true"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignRight="@id/strut4"
+                android:layout_alignParentLeft="true"
+                android:text="Password"
+                android:textSize="26sp"/>
+            <TextView
+                android:id="@+id/password2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/strut4"
+                android:layout_alignParentRight="true"
+                android:text="**********"
+                android:textSize="26sp"/>
+
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/view4"
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/passwordView"
+            android:layout_marginTop="20dp"
+            android:background="#ff9703" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/view4"
+            android:layout_marginTop="83dp"
+            android:layout_marginBottom="83dp">
+
+            <Button
+                android:id="@+id/update_profile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+
+                android:text="UPDATE PROFILE"
+                android:textSize="20dp" />
+
+
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+</ScrollView>

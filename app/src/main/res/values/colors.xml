@@ -3,4 +3,15 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="colorSolidCircle">#ffffff</color>
+    <color name="colorCircleBorder">#ffffff</color>
+    <color name="gradStart">#696969</color>
+    <color name="gradEnd">#A9A9A9</color>
+    <color name="gradColorStart">#B0C369</color>
+    <color name="gradColor">#A4C639</color>
+    <color name="colorUsername">#D81B60</color>
+    <color name="colorEmail">#D81B60</color>
+    <color name="colorLocation">#D81B60</color>
+    <color name="colorPassword">#D81B60</color>
 </resources>
