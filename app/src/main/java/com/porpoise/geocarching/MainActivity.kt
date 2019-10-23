@@ -18,6 +18,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.firestore.FirebaseFirestore
 import android.util.Log
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.GeoPoint
+import com.porpoise.geocarching.firebaseObjects.Cache
+import org.imperiumlabs.geofirestore.GeoFirestore
+import org.imperiumlabs.geofirestore.extension.setLocation
 
 
 class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionListener {
@@ -65,6 +70,23 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
                 Log.d("TESTTAG", "${document.id} => ${document.data}")
             }
         }
+
+        // for adding default cache data to firebase
+//        val lat = 43.545115
+//        val long = -80.247056
+//        val newCache = Cache(GeoPoint(lat, long),
+//                date_placed = Timestamp.now(),
+//                description = "testing cache",
+//                model = 1,
+//                name = "testing cache 2"
+//                )
+//        db.collection("Caches").add(newCache).addOnSuccessListener { cacheID ->
+//            val geoFirestore = GeoFirestore(db.collection(getString(R.string.firebase_collection_caches)))
+//
+//            geoFirestore.setLocation(cacheID.id, GeoPoint(lat, long)) { exception ->
+//                if(exception != null) Log.d("geoFirestore" , "failed to add location to cache ${cacheID.id}, exception: ${exception.message}")
+//            }
+//        }
 
         val floatingActionButton : FloatingActionButton = findViewById(R.id.fab)
 
