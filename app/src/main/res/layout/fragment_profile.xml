@@ -25,8 +25,9 @@
                 android:background="@drawable/circle_border">
 
                 <ImageView
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/profile_image_view"
                     android:layout_margin="5dp"
                     android:adjustViewBounds="true"
                     android:background="@drawable/circle"
@@ -39,6 +40,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/userfullname_text_view"
                 android:layout_below="@+id/imgUser"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="5dp"
@@ -69,7 +71,7 @@
                 android:text="Username"
                 android:textSize="26sp"/>
             <TextView
-                android:id="@+id/username2"
+                android:id="@+id/username_text_view"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_alignLeft="@id/strut"
@@ -110,7 +112,7 @@
                 android:text="Email"
                 android:textSize="26sp"/>
             <TextView
-                android:id="@+id/email2"
+                android:id="@+id/email_text_view"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_alignLeft="@id/strut2"
