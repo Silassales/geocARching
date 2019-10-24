@@ -1,13 +1,17 @@
 package com.porpoise.geocarching.NavUI
 
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.porpoise.geocarching.R
+import com.squareup.picasso.Picasso
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -28,6 +32,14 @@ class Profile : Fragment() {
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
 
+    private lateinit var auth: FirebaseAuth
+    lateinit var profilePicView: ImageView
+    lateinit var userFullNameTextView: TextView
+    lateinit var usernameTextView: TextView
+    lateinit var emailTextView: TextView
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -39,7 +51,23 @@ class Profile : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+        val view: View = inflater.inflate(R.layout.fragment_profile, container, false)
+        profilePicView = view.findViewById(R.id.profile_image_view)
+        userFullNameTextView = view.findViewById(R.id.userfullname_text_view)
+        usernameTextView = view.findViewById(R.id.username_text_view)
+        emailTextView = view.findViewById(R.id.email_text_view)
+
+        auth = FirebaseAuth.getInstance()
+        auth.currentUser?.run {
+            val user: FirebaseUser = auth.currentUser as FirebaseUser
+
+            user.photoUrl?.let { Picasso.get().load(it).into(profilePicView) }
+            user.displayName?.let { userFullNameTextView.text = it }
+            user.displayName?.let { usernameTextView.text = it }
+            user.email?.let { emailTextView.text = it }
+        }
+
+        return view
     }
 
     // TODO: Rename method, update argument and hook method into UI event
