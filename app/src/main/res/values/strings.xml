@@ -16,4 +16,9 @@
     <string name="disconnect_account">Disconnect Account</string>
     <string name="firebase_users_uid">uid</string>
     <string name="firebase_collection_users">Users</string>
+    <string name="add_marker_name_hint">Name of cache</string>
+    <string name="dialog_positive">Ok</string>
+    <string name="dialog_negative">Cancel</string>
+    <string name="add_marker_dialog_message">Add New Marker</string>
+    <string name="add_marker_desc_hint">Description of cache</string>
 </resources>
