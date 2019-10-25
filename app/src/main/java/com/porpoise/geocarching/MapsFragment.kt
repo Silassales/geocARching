@@ -10,21 +10,27 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.DialogFragment
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.porpoise.geocarching.Util.Constants.DEFAULT_CACHE_MARKER_SEARCH_RADIUS
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LAT
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
 import com.porpoise.geocarching.firebaseObjects.Cache
 import org.imperiumlabs.geofirestore.GeoFirestore
 import org.imperiumlabs.geofirestore.GeoQuery
+import org.imperiumlabs.geofirestore.extension.setLocation
 import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
+
+
 
 /**
  * A simple [Fragment] subclass.
@@ -34,8 +40,7 @@ import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
  * Use the [MapsFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class MapsFragment : Fragment(), OnMapReadyCallback {
-
+class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
 
     private var listener: OnFragmentInteractionListener? = null
     private val locationUpdateInterval = 5 * 1000 // 5 secs
@@ -45,6 +50,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     private var mMap: GoogleMap? = null
     private var geoQuery: GeoQuery? = null
     private lateinit var markerMap: MutableMap<String, Marker>
+    private var addMarkerLatLng: LatLng? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -91,12 +97,23 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
     }
 
     override fun onMapReady(googleMap: GoogleMap?) {
+        // need this to call dialog
+        val thisFragment = this
         googleMap?.run {
             mMap = googleMap
 
             // set the map style
             mMap!!.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.style_json))
             mMap?.setMinZoomPreference(17.0f)
+
+            // set the click listener for adding user caches
+            mMap!!.setOnMapLongClickListener {
+                // Create an instance of the dialog fragment and show it
+                addMarkerLatLng = it
+                val dialog = AddMarkerFragment()
+                dialog.setTargetFragment(thisFragment, 0)
+                fragmentManager?.let { fm -> dialog.show(fm, "add_friend_dialog")  }
+            }
 
             // set map UI settings
             val uiSettings = mMap!!.uiSettings
@@ -160,6 +177,33 @@ class MapsFragment : Fragment(), OnMapReadyCallback {
                 }
             })
         }
+    }
+
+    override fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String) {
+        // so if everything is in order.. we should have a latlng by now but ya idk maybe not
+        addMarkerLatLng?.let {
+            addCacheToFirebase(cacheName, cacheDesc, it)
+        }
+    }
+
+    private fun addCacheToFirebase(cacheName: String, cacheDesc: String, latLng: LatLng) {
+        val newCache = Cache(GeoPoint(latLng.latitude, latLng.longitude),
+                date_placed = Timestamp.now(),
+                model = 1,
+                name = cacheName,
+                description = cacheDesc)
+
+        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).add(newCache).addOnSuccessListener {
+            val geoFirestore = GeoFirestore(FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)))
+
+            geoFirestore.setLocation(it.id, GeoPoint(latLng.latitude, latLng.longitude)) { e ->
+                if(e != null) Log.d("addCacheToFirebase", "failed to add location to cache ${it.id}, exception: ${e.message}")
+            }
+        }
+    }
+
+    override fun onDialogNegativeClick(dialog: DialogFragment) {
+        dialog.dismiss()
     }
 
     private fun startLocationTracking() {
