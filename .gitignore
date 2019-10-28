@@ -1,5 +1,8 @@
 # Built application files
 /*/build/
+*.apk
+*.ap_
+*.aab
 
 # Crashlytics configuations
 com_crashlytics_export_strings.xml
@@ -25,7 +28,16 @@ local.properties
 .idea/modules.xml
 .idea/scopes/scope_settings.xml
 .idea/vcs.xml
-*.iml
+.idea/caches/
+**/*.iml
+.idea/kotlinc.xml
+
+# Eclipse Core      
+.project
+**/.settings/org.eclipse.buildship.core.prefs
+
+# JDT-specific (Eclipse Java Development Tools)     
+.classpath
 
 # OS-specific files
 .DS_Store

@@ -1,6 +1,5 @@
 package com.porpoise.geocarching
 
-import android.content.Context
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
@@ -11,26 +10,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
+
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
+
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+
 import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.porpoise.geocarching.Util.Constants.DEFAULT_CACHE_MARKER_SEARCH_RADIUS
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LAT
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
+import com.porpoise.geocarching.Util.Constants.NEARBY_CACHE_DISTANCE
+import com.porpoise.geocarching.Util.DegToUTM
+
 import com.porpoise.geocarching.firebaseObjects.Cache
 import org.imperiumlabs.geofirestore.GeoFirestore
 import org.imperiumlabs.geofirestore.GeoQuery
 import org.imperiumlabs.geofirestore.extension.setLocation
 import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
-
-
 
 /**
  * A simple [Fragment] subclass.
@@ -41,8 +41,6 @@ import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
  * create an instance of this fragment.
  */
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
-
-    private var listener: OnFragmentInteractionListener? = null
     private val locationUpdateInterval = 5 * 1000 // 5 secs
     private val locationUpdateFastestInterval = 1000 // 1 sec
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -51,6 +49,11 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     private var geoQuery: GeoQuery? = null
     private lateinit var markerMap: MutableMap<String, Marker>
     private var addMarkerLatLng: LatLng? = null
+
+    // used to publicly access the cache nearbyCacheId
+    companion object {
+        var nearbyCacheId: String? = null
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -67,12 +70,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         return view
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        startLocationTracking()
-    }
-
     override fun onPause() {
         super.onPause()
 
@@ -80,20 +77,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
         geoQuery?.removeAllListeners()
         markerMap.clear()
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is OnFragmentInteractionListener) {
-            listener = context
-        } else {
-            throw RuntimeException("$context must implement OnFragmentInteractionListener")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
     }
 
     override fun onMapReady(googleMap: GoogleMap?) {
@@ -231,6 +214,38 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         mMap ?: Log.e("UpdateMapLocation", "null mMap")
         mMap?.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
         updateCacheMarkerListeners(location)
+
+        setNearbyCache(location)
+    }
+
+    private fun setNearbyCache(location: Location) {
+        // reset, as there isn't always a nearby cache
+        nearbyCacheId = null
+
+        var nearestMarker: Marker? = null
+        var nearestMarkerId: String? = null
+        var nearestDistance = NEARBY_CACHE_DISTANCE // must be at least nearer than NEARBY_CACHE_DISTANCE
+
+        for(marker in markerMap) {
+            val distance = DegToUTM.distanceBetweenDeg(location.latitude, location.longitude, marker.value.position.latitude, marker.value.position.longitude)
+
+            // reset the icon colour
+            marker.value.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+
+            if (distance < nearestDistance) {
+                nearestMarker = marker.value
+                nearestMarkerId = marker.key
+                nearestDistance = distance
+            }
+        }
+
+        // if there's a nearby cache, set it
+        nearestMarker?.let {
+            nearbyCacheId = nearestMarkerId
+
+            // highlight the nearby cache
+            nearestMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+        }
     }
 
     private fun updateCacheMarkerListeners(location: Location) {

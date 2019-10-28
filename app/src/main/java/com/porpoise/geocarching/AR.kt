@@ -1,84 +1,105 @@
 package com.porpoise.geocarching
 
-import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+import android.graphics.Point
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.android.synthetic.main.fragment_ar.view.*
 
-/**
- * A simple [Fragment] subclass.
- * Activities that contain this fragment must implement the
- * [AR.OnFragmentInteractionListener] interface
- * to handle interaction events.
- * Use the [AR.newInstance] factory method to
- * create an instance of this fragment.
- */
+import com.google.ar.core.*
+import com.google.ar.sceneform.AnchorNode
+import com.google.ar.sceneform.FrameTime
+import com.google.ar.sceneform.ux.ArFragment
+import com.google.ar.sceneform.ux.TransformableNode
+import com.google.ar.sceneform.rendering.ModelRenderable
+
 class AR : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-    private var listener: OnFragmentInteractionListener? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var arFragment: ArFragment
+    private lateinit var cacheRenderable: ModelRenderable
+    private var cacheAnchorNode: AnchorNode? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_ar, container, false)
-    }
+        val view: View = inflater.inflate(R.layout.fragment_ar, container, false)
 
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-        listener?.onFragmentInteraction(uri)
-    }
+        // set the arFragment
+        arFragment = childFragmentManager.findFragmentById(R.id.ar_fragment) as? ArFragment ?: throw IllegalStateException("AR Fragment null onCreateView")
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments]
-     * (http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
-    interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        fun onFragmentInteraction(uri: Uri)
-    }
+        // set the cache model
+        ModelRenderable.builder()
+            .setSource(arFragment.context, R.raw.andy)
+            .build()
+            .thenAccept { cacheRenderable = it }
+            .exceptionally {
+                Snackbar.make(view, it.message.toString(), Snackbar.LENGTH_LONG).show()
+                return@exceptionally null
+            }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment AR.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-                AR().apply {
-                    arguments = Bundle().apply {
-                        putString(ARG_PARAM1, param1)
-                        putString(ARG_PARAM2, param2)
+        // we want to try and place the cache at the centre on each update until it happens
+        arFragment.arSceneView.scene.addOnUpdateListener(this::placeCacheAtScreenCentre)
+
+        view.cache_details_fab.setOnClickListener{
+            MapsFragment.nearbyCacheId?.let {
+                val cache = FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(it)
+                cache.get().addOnSuccessListener { result ->
+                    this.context?.let { context ->
+                        val builder = AlertDialog.Builder(context)
+                        builder.setMessage(result.get("description").toString())
+                            .setTitle(result.get("name").toString())
+                        val dialog = builder.create()
+                        dialog.show()
                     }
                 }
+            }
+        }
+
+        return view
+    }
+
+    private fun placeCacheAtScreenCentre(frameTime: FrameTime) {
+        // Let the fragment update its state first.
+        arFragment.onUpdate(frameTime)
+
+        arFragment.arSceneView.arFrame?.let { arFrame ->
+            // If ARCore is not tracking yet, then don't process anything
+            // attempt to place the anchor at the centre of the screen only if no anchor has been set
+            if (arFrame.camera.trackingState == TrackingState.TRACKING && cacheAnchorNode == null) {
+                activity?.run {
+                    val screenSize = Point()
+                    windowManager.defaultDisplay.getSize(screenSize)
+
+                    // perform hit tests and look for a hit that hits the plane
+                    for (hit in arFrame.hitTest(screenSize.x.toFloat() / 2f, screenSize.y.toFloat() / 2f)) {
+                        val trackable = hit.trackable
+
+                        if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
+                            setCacheAnchorNode(hit.createAnchor())
+                            placeCache()
+
+                            break
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun setCacheAnchorNode(anchor: Anchor) {
+        cacheAnchorNode = AnchorNode(anchor)
+        arFragment.arSceneView.scene.addChild(cacheAnchorNode)
+    }
+
+    private fun placeCache() {
+        var transformableNode = TransformableNode(arFragment.transformationSystem)
+        transformableNode.renderable = cacheRenderable
+        transformableNode.setParent(cacheAnchorNode)
+        transformableNode.select()
     }
 }

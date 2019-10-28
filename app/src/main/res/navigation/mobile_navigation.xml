@@ -38,7 +38,7 @@
     <fragment
         android:id="@+id/AR"
         android:name="com.porpoise.geocarching.AR"
-        android:label="fragment_ar"
+        android:label="Cache Viewer"
         tools:layout="@layout/fragment_ar" />
 
 </navigation>
