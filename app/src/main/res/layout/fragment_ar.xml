@@ -5,10 +5,17 @@
     android:layout_height="match_parent"
     tools:context=".AR">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <fragment android:name="com.google.ar.sceneform.ux.ArFragment"
+        android:id="@+id/ar_fragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="match_parent" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/cache_details_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:src="@drawable/ic_details_black_24dp"
+        android:layout_margin="16dp" />
 
 </FrameLayout>

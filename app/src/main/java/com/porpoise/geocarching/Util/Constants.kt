@@ -1,7 +1,6 @@
 package com.porpoise.geocarching.Util
 
 object Constants {
-
     // Guelph
     const val DEFAULT_LAT = 43.544804
     const val DEFAULT_LONG = -80.248169
@@ -17,4 +16,5 @@ object Constants {
 
     //misc
     const val SPLASH_SCREEN_DELAY = 1000L
+    const val NEARBY_CACHE_DISTANCE = 10.0
 }

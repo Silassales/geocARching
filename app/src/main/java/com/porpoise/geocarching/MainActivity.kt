@@ -16,14 +16,9 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.firestore.FirebaseFirestore
-import android.util.Log
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.GeoPoint
-import com.porpoise.geocarching.firebaseObjects.Cache
-import org.imperiumlabs.geofirestore.GeoFirestore
-import org.imperiumlabs.geofirestore.extension.setLocation
-
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionListener {
     override fun onFragmentInteraction(uri: Uri) {
@@ -59,39 +54,25 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        //Collections are tables, documents are entries
-        val db = FirebaseFirestore.getInstance()
-        val profiles = db.collection("profiles")
-        //val profile = hashMapOf("name" to "Aaron", "num_caches" to 0)
-        //profiles.document("document_title").set(profile)
-        //val acquired_profile = profiles.get("document_title")
-        profiles.get().addOnSuccessListener(){ result ->
-            for(document in result) {
-                Log.d("TESTTAG", "${document.id} => ${document.data}")
-            }
-        }
-
-        // for adding default cache data to firebase
-//        val lat = 43.545115
-//        val long = -80.247056
-//        val newCache = Cache(GeoPoint(lat, long),
-//                date_placed = Timestamp.now(),
-//                description = "testing cache",
-//                model = 1,
-//                name = "testing cache 2"
-//                )
-//        db.collection("Caches").add(newCache).addOnSuccessListener { cacheID ->
-//            val geoFirestore = GeoFirestore(db.collection(getString(R.string.firebase_collection_caches)))
-//
-//            geoFirestore.setLocation(cacheID.id, GeoPoint(lat, long)) { exception ->
-//                if(exception != null) Log.d("geoFirestore" , "failed to add location to cache ${cacheID.id}, exception: ${exception.message}")
-//            }
-//        }
-
         val floatingActionButton : FloatingActionButton = findViewById(R.id.fab)
 
         floatingActionButton.setOnClickListener{
-            navController.navigate(R.id.AR)
+            if (MapsFragment.nearbyCacheId == null) {
+                // give an alert if we're not near a cache
+                Snackbar.make(it, "No cache nearby, go and find one!", Snackbar.LENGTH_LONG).show()
+            } else {
+                // navigate if we're near a cache
+                navController.navigate(R.id.AR)
+            }
+        }
+
+        // add a listener to hide the fab when opening the cache viewer and to show it when leaving
+        navController.addOnDestinationChangedListener{_: NavController, destination: NavDestination, _: Bundle? ->
+            if (destination.id == R.id.AR) {
+                floatingActionButton.hide()
+            } else {
+                floatingActionButton.show()
+            }
         }
     }
 
