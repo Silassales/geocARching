@@ -16,5 +16,9 @@ object Constants {
 
     //misc
     const val SPLASH_SCREEN_DELAY = 1000L
+
+    // this is just to track which permission was request from onRequestPermissionsResult
+    const val MY_PERMISSIONS_REQUEST_ACCESS_LOCATION = 1
+
     const val NEARBY_CACHE_DISTANCE = 10.0
 }

@@ -1,5 +1,8 @@
 package com.porpoise.geocarching
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
@@ -9,6 +12,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 
 import com.google.android.gms.location.*
@@ -23,9 +27,9 @@ import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.porpoise.geocarching.Util.Constants.DEFAULT_CACHE_MARKER_SEARCH_RADIUS
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LAT
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
+import com.porpoise.geocarching.Util.Constants.MY_PERMISSIONS_REQUEST_ACCESS_LOCATION
 import com.porpoise.geocarching.Util.Constants.NEARBY_CACHE_DISTANCE
 import com.porpoise.geocarching.Util.DegToUTM
-
 import com.porpoise.geocarching.firebaseObjects.Cache
 import org.imperiumlabs.geofirestore.GeoFirestore
 import org.imperiumlabs.geofirestore.GeoQuery
@@ -43,11 +47,11 @@ import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
     private val locationUpdateInterval = 5 * 1000 // 5 secs
     private val locationUpdateFastestInterval = 1000 // 1 sec
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private var fusedLocationProviderClient: FusedLocationProviderClient? = null
     private var locationCallback: LocationCallback? = null
     private var mMap: GoogleMap? = null
     private var geoQuery: GeoQuery? = null
-    private lateinit var markerMap: MutableMap<String, Marker>
+    private var markerMap: MutableMap<String, Marker> = mutableMapOf()
     private var addMarkerLatLng: LatLng? = null
 
     // used to publicly access the cache nearbyCacheId
@@ -59,22 +63,31 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                               savedInstanceState: Bundle?): View? {
         val view: View = inflater.inflate(R.layout.fragment_maps, container, false)
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(view.context)
-
-        val mapsFragment = childFragmentManager.findFragmentById(R.id.main_map_fragment) as? SupportMapFragment ?: throw IllegalStateException("Map Fragment null onCreateView")
-
-        mapsFragment.getMapAsync(this)
-
-        markerMap = mutableMapOf()
+        // first thing we wanna do is check permissions access
+        if(!checkPermissionsAccess()) {
+            requestPermissionsAccess()
+        } else {
+            createViewWithPermissions()
+        }
 
         return view
+    }
+
+    private fun createViewWithPermissions() {
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context
+                ?: throw IllegalStateException("context null onCreateView"))
+
+        val mapsFragment = childFragmentManager.findFragmentById(R.id.main_map_fragment) as? SupportMapFragment
+                ?: throw IllegalStateException("Map Fragment null onCreateView")
+
+        mapsFragment.getMapAsync(this)
     }
 
     override fun onPause() {
         super.onPause()
 
         // we don't want to be update the user location if they close the app
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        fusedLocationProviderClient?.removeLocationUpdates(locationCallback)
         geoQuery?.removeAllListeners()
         markerMap.clear()
     }
@@ -207,7 +220,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         locationRequest.interval = locationUpdateInterval.toLong()
         locationRequest.fastestInterval = locationUpdateFastestInterval.toLong()
 
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+        fusedLocationProviderClient?.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
     private fun updateMapLocation(location: Location) {
@@ -269,6 +282,39 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         fun onFragmentInteraction(uri: Uri)
+    }
+
+    /*
+   Permissions stuff
+    */
+
+    private fun checkPermissionsAccess() : Boolean {
+        // check for fine location permission
+        context?.let { return (ContextCompat.checkSelfPermission(it, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) }
+        // if context is null we have bigger issues than permissions
+        return false
+    }
+
+    private fun requestPermissionsAccess() {
+        // In the future we may want to add prompts for the users to know why we need these permissions
+        requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MY_PERMISSIONS_REQUEST_ACCESS_LOCATION)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when(requestCode) {
+            MY_PERMISSIONS_REQUEST_ACCESS_LOCATION -> {
+
+                if((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED)) {
+                    /* we could ask for permissions again, but in my testing this caused the app to crash and wasnt very user
+                    friendly TODO add some feedback for the user if they decline
+                    */
+
+                    activity?.finishAndRemoveTask()
+                } else {
+                    createViewWithPermissions()
+                }
+            }
+        }
     }
 
 }
