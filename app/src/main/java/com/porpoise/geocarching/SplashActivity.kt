@@ -27,7 +27,10 @@ import com.porpoise.geocarching.Util.Constants.DONT_SIGN_OUT_MESSAGE
 import com.porpoise.geocarching.Util.Constants.RC_SIGN_IN
 import com.porpoise.geocarching.Util.Constants.SIGN_OUT_MESSAGE
 import com.porpoise.geocarching.Util.Constants.SPLASH_SCREEN_DELAY
+import com.porpoise.geocarching.Util.Constants.STARTING_EXPERIENCE
+import com.porpoise.geocarching.Util.Constants.STARTING_LEVEL
 import com.porpoise.geocarching.firebaseObjects.User
+import com.porpoise.geocarching.firebaseObjects.UserVisit
 
 
 class SplashActivity : AppCompatActivity(), View.OnClickListener {
@@ -133,8 +136,8 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
         Log.d("populateUserCollectionWithLoggedInUser", "checking if user with uid $uid has an account, and if not creating one for them")
         db.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), uid).get().addOnSuccessListener {
             if (it.isEmpty) {
-                val newUser = User(currentUser?.uid ?: "", currentUser?.email
-                        ?: "", 0, 0, currentUser?.displayName ?: "username")
+                val newUser = User(currentUser?.displayName ?: getString(R.string.default_username), currentUser?.email
+                        ?: "", currentUser?.uid ?: "", STARTING_EXPERIENCE, STARTING_LEVEL)
 
                 db.collection("Users").add(newUser)
             }

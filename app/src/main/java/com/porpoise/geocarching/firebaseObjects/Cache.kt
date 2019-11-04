@@ -11,4 +11,6 @@ data class Cache(val ar_cord: GeoPoint =  GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
                  val date_placed: Timestamp = Timestamp.now(),
                  val description: String = "",
                  val model: Int = 1,
-                 val name: String = "")
+                 val name: String = "",
+                 val l: GeoPoint =  GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
+                 val g: String = "")
