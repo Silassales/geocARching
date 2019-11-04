@@ -7,8 +7,14 @@ import com.porpoise.geocarching.Util.Constants.DEFAULT_LAT
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
 
 @IgnoreExtraProperties
-data class User(val uid: String,
+data class User(val username: String = "",
                 val email: String = "",
+                val uid: String = "",
                 val experience: Int = 0,
-                val level: Int = 0,
-                val username: String = "")
+                val level: Int = 0
+                )
+
+@IgnoreExtraProperties
+data class UserVisit(val name: String = "",
+                     val l: GeoPoint = GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
+                     val g: String = "")

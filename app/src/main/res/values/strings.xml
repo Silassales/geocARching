@@ -21,4 +21,6 @@
     <string name="dialog_negative">Cancel</string>
     <string name="add_marker_dialog_message">Add New Marker</string>
     <string name="add_marker_desc_hint">Description of cache</string>
+    <string name="default_username">username</string>
+    <string name="firebase_collection_users_visits">Visits</string>
 </resources>

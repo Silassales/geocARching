@@ -17,7 +17,7 @@
         tools:layout="@layout/fragment_profile" />
     <fragment
         android:id="@+id/nav_records"
-        android:name="com.porpoise.geocarching.NavUI.Records"
+        android:name="com.porpoise.geocarching.NavUI.Records.Records"
         android:label="fragment_records"
         tools:layout="@layout/fragment_records" />
     <fragment

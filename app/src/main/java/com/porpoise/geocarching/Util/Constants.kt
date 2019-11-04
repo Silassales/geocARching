@@ -21,4 +21,9 @@ object Constants {
     const val MY_PERMISSIONS_REQUEST_ACCESS_LOCATION = 1
 
     const val NEARBY_CACHE_DISTANCE = 10.0
+
+    /* ----------------------- Firebase --------------------------- */
+    // Users
+    const val STARTING_LEVEL = 0
+    const val STARTING_EXPERIENCE = 0
 }
