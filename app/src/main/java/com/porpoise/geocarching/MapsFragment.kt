@@ -1,7 +1,6 @@
 package com.porpoise.geocarching
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
@@ -27,6 +26,8 @@ import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.porpoise.geocarching.Util.Constants.DEFAULT_CACHE_MARKER_SEARCH_RADIUS
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LAT
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
+import com.porpoise.geocarching.Util.Constants.LOCATION_UPDATE_FASTEST_INTERVAL
+import com.porpoise.geocarching.Util.Constants.LOCATION_UPDATE_INTERVAL
 import com.porpoise.geocarching.Util.Constants.MY_PERMISSIONS_REQUEST_ACCESS_LOCATION
 import com.porpoise.geocarching.Util.Constants.NEARBY_CACHE_DISTANCE
 import com.porpoise.geocarching.Util.DegToUTM
@@ -36,17 +37,8 @@ import org.imperiumlabs.geofirestore.GeoQuery
 import org.imperiumlabs.geofirestore.extension.setLocation
 import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
 
-/**
- * A simple [Fragment] subclass.
- * Activities that contain this fragment must implement the
- * [MapsFragment.OnFragmentInteractionListener] interface
- * to handle interaction events.
- * Use the [MapsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
-    private val locationUpdateInterval = 5 * 1000 // 5 secs
-    private val locationUpdateFastestInterval = 1000 // 1 sec
+
     private var fusedLocationProviderClient: FusedLocationProviderClient? = null
     private var locationCallback: LocationCallback? = null
     private var mMap: GoogleMap? = null
@@ -95,27 +87,28 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     override fun onMapReady(googleMap: GoogleMap?) {
         // need this to call dialog
         val thisFragment = this
-        googleMap?.run {
-            mMap = googleMap
-
+        googleMap?.let { safeGMap ->
             // set the map style
-            mMap!!.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.style_json))
-            mMap?.setMinZoomPreference(17.0f)
+            safeGMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.style_json))
+            safeGMap.setMinZoomPreference(17.0f)
 
             // set the click listener for adding user caches
-            mMap!!.setOnMapLongClickListener {
+            safeGMap.setOnMapLongClickListener { latLong ->
                 // Create an instance of the dialog fragment and show it
-                addMarkerLatLng = it
+                addMarkerLatLng = latLong
                 val dialog = AddMarkerFragment()
                 dialog.setTargetFragment(thisFragment, 0)
                 fragmentManager?.let { fm -> dialog.show(fm, "add_friend_dialog")  }
             }
 
             // set map UI settings
-            val uiSettings = mMap!!.uiSettings
+            val uiSettings = safeGMap.uiSettings
             uiSettings.isCompassEnabled = false
             uiSettings.isMyLocationButtonEnabled = false
             uiSettings.isScrollGesturesEnabled = false
+
+            /* this NEEDS to be called before [addCacheMarkerListeners] and [startLocationTracking] */
+            mMap = safeGMap
 
             addCacheMarkerListeners()
 
@@ -125,7 +118,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
 
     private fun addCacheMarkerListeners() {
         mMap ?: Log.e("addCacheMarkerListeners", "null mMap")
-        mMap?.run {
+        mMap?.let {
             // setup firebase references
             val ref = FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches))
             val geoFire = GeoFirestore(ref)
@@ -135,14 +128,14 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             geoQuery?.addGeoQueryEventListener(object : GeoQueryEventListener {
 
                 override fun onKeyMoved(documentID: String, location: GeoPoint) {
-                    mMap?.run {
+                    mMap?.let { safeMap ->
                         Log.d("cacheOnKeyMoved", "cache with ID $documentID  moved to $location ")
                         if(markerMap.containsKey(documentID)) {
                             val marker = markerMap[documentID] as Marker
                             marker.position = LatLng(location.latitude, location.longitude)
                         } else {
                             // aren't currently tracking this cache, lets add it
-                            mMap!!.addMarker(MarkerOptions().position(LatLng(location.longitude, location.latitude)))
+                            safeMap.addMarker(MarkerOptions().position(LatLng(location.longitude, location.latitude)))
                         }
                     }
                 }
@@ -157,9 +150,9 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                 }
 
                 override fun onKeyEntered(documentID: String, location: GeoPoint) {
-                    mMap?.run {
+                    mMap?.let { safeMap ->
                         Log.d("cacheOnKeyEntered", "new cache found at $location with ID $documentID")
-                        val marker = mMap!!.addMarker(MarkerOptions().position(LatLng(location.latitude, location.longitude)))
+                        val marker = safeMap.addMarker(MarkerOptions().position(LatLng(location.latitude, location.longitude)))
                         markerMap[documentID] = marker
                     }
                 }
@@ -217,8 +210,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
 
         val locationRequest: LocationRequest = LocationRequest.create()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        locationRequest.interval = locationUpdateInterval.toLong()
-        locationRequest.fastestInterval = locationUpdateFastestInterval.toLong()
+        locationRequest.interval = LOCATION_UPDATE_INTERVAL.toLong()
+        locationRequest.fastestInterval = LOCATION_UPDATE_FASTEST_INTERVAL.toLong()
 
         fusedLocationProviderClient?.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
@@ -263,7 +256,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
 
     private fun updateCacheMarkerListeners(location: Location) {
         mMap ?: Log.e("addCacheMarkerListeners", "null mMap")
-        mMap?.run {
+        mMap?.let {
             geoQuery?.setLocation(GeoPoint(location.latitude, location.longitude), DEFAULT_CACHE_MARKER_SEARCH_RADIUS)
         }
     }
