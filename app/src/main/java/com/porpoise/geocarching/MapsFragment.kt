@@ -123,9 +123,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             /* this NEEDS to be called before [addCacheMarkerListeners] and [startLocationTracking] */
             mMap = safeGMap
 
-            /* this NEEDS to be called before [addCacheMarkerListeners] and [startLocationTracking] */
-            mMap = safeGMap
-
             addCacheMarkerListeners()
 
             startLocationTracking()
