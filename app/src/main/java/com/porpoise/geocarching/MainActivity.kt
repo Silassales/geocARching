@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
 
         // add a listener to hide the fab when opening the cache viewer and to show it when leaving
         navController.addOnDestinationChangedListener { _: NavController, destination: NavDestination, _: Bundle? ->
-            if (destination.id == R.id.AR) {
+            if (destination.id != R.id.nav_maps) {
                 floatingActionButton.hide()
             } else {
                 floatingActionButton.show()
