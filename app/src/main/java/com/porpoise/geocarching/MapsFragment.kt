@@ -101,11 +101,27 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                 fragmentManager?.let { fm -> dialog.show(fm, "add_friend_dialog")  }
             }
 
+            safeGMap.setOnMarkerClickListener { marker ->
+                markerMap.asIterable().find { it.value == marker }?.let {
+                    FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(it.key).get().addOnSuccessListener { result ->
+                        marker.title = result.getString("name")
+                        marker.snippet = result.getString("description")
+                        marker.showInfoWindow()
+                    }
+                }
+
+                true
+            }
+
             // set map UI settings
             val uiSettings = safeGMap.uiSettings
             uiSettings.isCompassEnabled = false
             uiSettings.isMyLocationButtonEnabled = false
             uiSettings.isScrollGesturesEnabled = false
+            uiSettings.isMapToolbarEnabled = false
+
+            /* this NEEDS to be called before [addCacheMarkerListeners] and [startLocationTracking] */
+            mMap = safeGMap
 
             /* this NEEDS to be called before [addCacheMarkerListeners] and [startLocationTracking] */
             mMap = safeGMap
@@ -311,3 +327,4 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     }
 
 }
+
