@@ -3,19 +3,15 @@ package com.porpoise.geocarching.NavUI
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.provider.AlarmClock.EXTRA_LENGTH
 import android.provider.AlarmClock.EXTRA_MESSAGE
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.porpoise.geocarching.R
 import com.porpoise.geocarching.SplashActivity
-import com.porpoise.geocarching.Util.Constants.DISCONNECT_MESSAGE
 import com.porpoise.geocarching.Util.Constants.SIGN_OUT_MESSAGE
 
 
@@ -38,7 +34,6 @@ class SignOut : Fragment() {
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
     private lateinit var signOutButton: Button
-    private lateinit var disconnectAccountButton: Button
     private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,33 +61,7 @@ class SignOut : Fragment() {
             startActivity(intent)
         }
 
-        disconnectAccountButton = view.findViewById(R.id.disconnect_account_button)
-        disconnectAccountButton.setOnClickListener {
-            removeUserFromFirebase()
-
-            val intent = Intent(context, SplashActivity::class.java).apply {
-                putExtra(EXTRA_LENGTH, DISCONNECT_MESSAGE)
-            }
-
-            startActivity(intent)
-        }
-
         return view
-    }
-
-    private fun removeUserFromFirebase() {
-        val db = FirebaseFirestore.getInstance()
-
-        db.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), auth.currentUser?.uid).get().addOnSuccessListener {
-            for ( document in it) {
-                Log.i("removeUserFromFirebase", "removing user: ${document.id}")
-                db.collection(getString(R.string.firebase_collection_users)).document(document.id).delete()
-            }
-
-        }
-
-        auth.currentUser?.delete()
-        auth.signOut()
     }
 
     // TODO: Rename method, update argument and hook method into UI event

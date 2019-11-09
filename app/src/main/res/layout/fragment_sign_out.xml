@@ -20,15 +20,6 @@
             android:text="@string/sign_out"
             />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/disconnect_account_button"
-            app:layout_constraintTop_toBottomOf="@+id/sign_out_button"
-            app:layout_constraintStart_toStartOf="parent"
-            android:text="@string/disconnect_account"
-            />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 
