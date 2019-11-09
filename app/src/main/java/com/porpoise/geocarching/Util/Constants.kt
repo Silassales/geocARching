@@ -1,5 +1,7 @@
 package com.porpoise.geocarching.Util
 
+import com.porpoise.geocarching.R
+
 object Constants {
     // Guelph
     const val DEFAULT_LAT = 43.544804
@@ -9,6 +11,21 @@ object Constants {
     const val DEFAULT_CACHE_MARKER_SEARCH_RADIUS = 1.0 // km
     const val LOCATION_UPDATE_INTERVAL = 3 * 1000 // 3 secs
     const val LOCATION_UPDATE_FASTEST_INTERVAL = 1000 // 1 sec
+
+    const val DEFAULT_MODEL = R.drawable.marker_1
+    val MARKER_MODEL_MAP = hashMapOf(
+            1 to R.drawable.marker_1,
+            2 to R.drawable.marker_2,
+            3 to R.drawable.marker_3,
+            4 to R.drawable.marker_4
+    )
+    const val DEFAULT_NEARBY_MODEL = R.drawable.marker_1_nearby
+    val MARKER_NEARBY_MODEL_MAP = hashMapOf(
+            1 to R.drawable.marker_1_nearby,
+            2 to R.drawable.marker_2_nearby,
+            3 to R.drawable.marker_3_nearby,
+            4 to R.drawable.marker_4_nearby
+    )
 
     // google sign in
     const val RC_SIGN_IN = 1

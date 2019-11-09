@@ -26,8 +26,10 @@ import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.porpoise.geocarching.Util.Constants.DEFAULT_CACHE_MARKER_SEARCH_RADIUS
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LAT
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
+import com.porpoise.geocarching.Util.Constants.DEFAULT_MODEL
 import com.porpoise.geocarching.Util.Constants.LOCATION_UPDATE_FASTEST_INTERVAL
 import com.porpoise.geocarching.Util.Constants.LOCATION_UPDATE_INTERVAL
+import com.porpoise.geocarching.Util.Constants.MARKER_MODEL_MAP
 import com.porpoise.geocarching.Util.Constants.MY_PERMISSIONS_REQUEST_ACCESS_LOCATION
 import com.porpoise.geocarching.Util.Constants.NEARBY_CACHE_DISTANCE
 import com.porpoise.geocarching.Util.DegToUTM
@@ -36,8 +38,14 @@ import org.imperiumlabs.geofirestore.GeoFirestore
 import org.imperiumlabs.geofirestore.GeoQuery
 import org.imperiumlabs.geofirestore.extension.setLocation
 import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
+import com.google.android.gms.maps.model.Marker
+import com.porpoise.geocarching.Util.Constants.DEFAULT_NEARBY_MODEL
+import com.porpoise.geocarching.Util.Constants.MARKER_NEARBY_MODEL_MAP
+import com.porpoise.geocarching.Util.BitmapUtil.bitmapDescriptorFromVector
+
 
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
+
 
     private var fusedLocationProviderClient: FusedLocationProviderClient? = null
     private var locationCallback: LocationCallback? = null
@@ -148,7 +156,9 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                             marker.position = LatLng(location.latitude, location.longitude)
                         } else {
                             // aren't currently tracking this cache, lets add it
-                            safeMap.addMarker(MarkerOptions().position(LatLng(location.longitude, location.latitude)))
+                            val marker = safeMap.addMarker(MarkerOptions().position(LatLng(location.longitude, location.latitude)))
+                            markerMap[documentID] = marker
+                            updateMarkerIcon(documentID, marker, nearby = false)
                         }
                     }
                 }
@@ -167,6 +177,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                         Log.d("cacheOnKeyEntered", "new cache found at $location with ID $documentID")
                         val marker = safeMap.addMarker(MarkerOptions().position(LatLng(location.latitude, location.longitude)))
                         markerMap[documentID] = marker
+                        updateMarkerIcon(documentID, marker, nearby = false)
                     }
                 }
 
@@ -181,17 +192,39 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         }
     }
 
-    override fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String) {
-        // so if everything is in order.. we should have a latlng by now but ya idk maybe not
-        addMarkerLatLng?.let {
-            addCacheToFirebase(cacheName, cacheDesc, it)
+    private fun updateMarkerIcon(documentID: String, marker: Marker?, nearby: Boolean) {
+        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener {cache ->
+            cache.toObject(Cache::class.java)?.let { safeCache ->
+                context?.let {safeContext ->
+                    if(nearby) {
+                        marker?.setIcon(bitmapDescriptorFromVector(safeContext, MARKER_NEARBY_MODEL_MAP[safeCache.model] ?: DEFAULT_NEARBY_MODEL))
+                    } else {
+                        marker?.setIcon(bitmapDescriptorFromVector(safeContext, MARKER_MODEL_MAP[safeCache.model] ?: DEFAULT_MODEL))
+                    }
+                }
+            }
         }
     }
 
-    private fun addCacheToFirebase(cacheName: String, cacheDesc: String, latLng: LatLng) {
+    override fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String) {
+        // so if everything is in order.. we should have a latlng by now but ya idk maybe not
+        addMarkerLatLng?.let {
+            addCacheToFirebase(cacheName, cacheDesc, cacheModel, it)
+        }
+    }
+
+    private fun addCacheToFirebase(cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
+        var model = 1
+        when(cacheModel){
+            "Model 1" -> model = 1
+            "Model 2" -> model = 2
+            "Model 3" -> model = 3
+            "Model 4" -> model = 4
+        }
+
         val newCache = Cache(GeoPoint(latLng.latitude, latLng.longitude),
                 date_placed = Timestamp.now(),
-                model = 1,
+                model = model,
                 name = cacheName,
                 description = cacheDesc)
 
@@ -249,7 +282,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             val distance = DegToUTM.distanceBetweenDeg(location.latitude, location.longitude, marker.value.position.latitude, marker.value.position.longitude)
 
             // reset the icon colour
-            marker.value.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+            updateMarkerIcon(marker.key, marker.value, nearby = false)
 
             if (distance < nearestDistance) {
                 nearestMarker = marker.value
@@ -263,7 +296,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             nearbyCacheId = nearestMarkerId
 
             // highlight the nearby cache
-            nearestMarker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+            nearestMarkerId?.let { updateMarkerIcon(nearestMarkerId, nearestMarker, nearby = true) }
         }
     }
 

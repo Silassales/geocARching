@@ -3,7 +3,9 @@ package com.porpoise.geocarching.Dialogs
 import android.app.Dialog
 import android.os.Bundle
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.Spinner
 
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
@@ -18,7 +20,7 @@ class AddMarkerFragment : DialogFragment() {
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     interface AddMarkerDialogListener {
-        fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String)
+        fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String)
         fun onDialogNegativeClick(dialog: DialogFragment)
     }
 
@@ -43,12 +45,24 @@ class AddMarkerFragment : DialogFragment() {
             val nameTextView: EditText = dialogView.findViewById(R.id.add_marker_name)
             val descEditText: EditText = dialogView.findViewById(R.id.add_marker_desc)
 
+            val spinner: Spinner = dialogView.findViewById(R.id.model_spinner)
+            context?.let { safeContext ->
+                ArrayAdapter.createFromResource(
+                        safeContext,
+                        R.array.cache_model_array,
+                        android.R.layout.simple_spinner_item
+                ).also { adapter ->
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    spinner.adapter = adapter
+                }
+            }
+
             builder.setView(dialogView)
                     .setMessage(R.string.add_marker_dialog_message)
                     .setPositiveButton(R.string.dialog_positive
                     ) { dialog, id ->
                         // Send the positive button event back to the host activity
-                        listener.onDialogPositiveClick(this, nameTextView.text.toString(), descEditText.text.toString())
+                        listener.onDialogPositiveClick(this, nameTextView.text.toString(), descEditText.text.toString(), spinner.selectedItem.toString())
                     }
                     .setNegativeButton(R.string.dialog_negative
                     ) { dialog, id ->
@@ -57,6 +71,7 @@ class AddMarkerFragment : DialogFragment() {
                     }
 
             builder.create()
+
         } ?: throw IllegalStateException("Activity cannot be null")
     }
 }
