@@ -23,6 +23,9 @@
     <string name="add_marker_desc_hint">Description of cache</string>
     <string name="default_username">username</string>
     <string name="firebase_collection_users_visits">Visits</string>
+    <string name="firebase_collection_users_placed_caches">PlacedCaches</string>
+    <string name="records_tab_visited_title">Visits</string>
+    <string name="records_tab_placed_title">Placed</string>
 
     <string-array name="cache_model_array">
         <item>Model 1</item>

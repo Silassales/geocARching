@@ -9,8 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.porpoise.geocarching.R
 import com.porpoise.geocarching.firebaseObjects.UserVisit
 
-class RecordsAdapter :
-        RecyclerView.Adapter<RecordsAdapter.MyViewHolder>() {
+class RecordsVisitsAdapter :
+        RecyclerView.Adapter<RecordsVisitsAdapter.MyViewHolder>() {
     private var userVisitList = emptyList<UserVisit>()
 
 
@@ -25,7 +25,7 @@ class RecordsAdapter :
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         holder.name.text = userVisitList[position].name
         holder.itemView.setOnClickListener{
-            Log.d("recordsOnItemClick", userVisitList[position].name)
+            Log.d("recordsVisitsOnItemClick", userVisitList[position].name)
         }
     }
 
