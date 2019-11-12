@@ -1,5 +1,6 @@
 package com.porpoise.geocarching
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AlertDialog
@@ -8,6 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 
 import android.graphics.Point
+import android.util.Log
+import android.view.MotionEvent
+import com.github.jinatonic.confetti.CommonConfetti
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.fragment_ar.view.*
@@ -18,11 +22,16 @@ import com.google.ar.sceneform.FrameTime
 import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.google.ar.sceneform.rendering.ModelRenderable
+import com.google.firebase.auth.FirebaseAuth
+import com.porpoise.geocarching.firebaseObjects.Cache
+import com.porpoise.geocarching.firebaseObjects.User
+import com.porpoise.geocarching.firebaseObjects.UserVisit
 
 class AR : Fragment() {
     private lateinit var arFragment: ArFragment
     private lateinit var cacheRenderable: ModelRenderable
     private var cacheAnchorNode: AnchorNode? = null
+    private var isCacheVisited: Boolean = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -45,6 +54,8 @@ class AR : Fragment() {
         // we want to try and place the cache at the centre on each update until it happens
         arFragment.arSceneView.scene.addOnUpdateListener(this::placeCacheAtScreenCentre)
 
+        getIsCacheVisited()
+
         view.cache_details_fab.setOnClickListener{
             MapsFragment.nearbyCacheId?.let {
                 val cache = FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(it)
@@ -61,6 +72,30 @@ class AR : Fragment() {
         }
 
         return view
+    }
+
+    private fun getIsCacheVisited() {
+        val firestore = FirebaseFirestore.getInstance()
+
+        FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
+            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
+                var currentUserId = ""
+                for (currentUserSnapshot in currentUserSnapshots) {
+                    currentUserId = currentUserSnapshot.id
+                }
+                firestore.collection(getString(R.string.firebase_collection_users))
+                    .document(currentUserId).collection(getString(R.string.firebase_collection_users_visits)).get().addOnSuccessListener { visitedCacheSnapshots ->
+                        MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
+                            val cache = FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(nearbyCacheId)
+
+                            // if we can't find a cache
+                            if (visitedCacheSnapshots.find { it.id == cache.id } == null) {
+                                isCacheVisited = false
+                            }
+                        }
+                    }
+            }
+        }
     }
 
     private fun placeCacheAtScreenCentre(frameTime: FrameTime) {
@@ -100,6 +135,75 @@ class AR : Fragment() {
         var transformableNode = TransformableNode(arFragment.transformationSystem)
         transformableNode.renderable = cacheRenderable
         transformableNode.setParent(cacheAnchorNode)
+        transformableNode.setOnTapListener { _, motionEvent -> onTapCache(motionEvent) }
         transformableNode.select()
+    }
+
+    private fun onTapCache(motionEvent: MotionEvent) {
+        if (!isCacheVisited) {
+            addVisitToCurrentUser(motionEvent)
+
+            return
+        }
+
+        this.view?.let {
+            Snackbar.make(it, R.string.ar_cache_dialog_visited, Snackbar.LENGTH_LONG).show()
+        }
+    }
+
+    private fun addVisitToCurrentUser(motionEvent: MotionEvent) {
+        // TODO this could be cleaned up and separated into parts
+
+        val firestore = FirebaseFirestore.getInstance()
+
+        FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
+            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
+                val currentUserSnapshot = currentUserSnapshots.last()
+
+                val currentUser = currentUserSnapshot.toObject(User::class.java)
+                val currentUserId = currentUserSnapshot.id
+
+                currentUser?.let {
+                    MapsFragment.nearbyCacheId?.let {nearbyCacheId ->
+                        firestore.collection(getString(R.string.firebase_collection_caches)).document(nearbyCacheId).get().addOnSuccessListener { visitedCacheSnapshot ->
+                            val visitedCache = visitedCacheSnapshot.toObject(Cache::class.java)
+                            val visitedCacheId = visitedCacheSnapshot.id
+
+                            visitedCache ?: Log.e("addVisitToCurrentUser", "Couldn't populate fields from snapshot: {${visitedCacheSnapshot.id}")
+                            visitedCache?.let {
+                                val visit = UserVisit(visitedCache.name, visitedCache.l, visitedCache.g)
+
+                                firestore.collection(getString(R.string.firebase_collection_users))
+                                    .document(currentUserId)
+                                    .collection(getString(R.string.firebase_collection_users_visits))
+                                    .document(visitedCacheId)
+                                    .set(visit)
+                                    .addOnSuccessListener {
+                                        triggerConfetti(motionEvent)
+
+                                        this.view?.let {
+                                            Snackbar.make(it, R.string.ar_cache_dialog_unvisited, Snackbar.LENGTH_LONG).show()
+                                        }
+
+                                        isCacheVisited = true
+                                    }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun triggerConfetti(motionEvent: MotionEvent) {
+        val explosion = CommonConfetti.explosion(
+                view as ViewGroup,
+                motionEvent.x.toInt(), motionEvent.y.toInt(),
+                intArrayOf(Color.YELLOW, Color.LTGRAY, Color.GREEN, Color.MAGENTA))
+
+        explosion.confettiManager
+                .setTTL(2000)
+
+        explosion.stream(1000)
     }
 }

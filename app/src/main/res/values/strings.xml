@@ -27,6 +27,9 @@
     <string name="records_tab_visited_title">Visits</string>
     <string name="records_tab_placed_title">Placed</string>
 
+    <string name="ar_cache_dialog_unvisited">Congratulations, you\'ve found a cache!</string>
+    <string name="ar_cache_dialog_visited">You\'ve already found this cache!</string>
+
     <string-array name="cache_model_array">
         <item>Model 1</item>
         <item>Model 2</item>
