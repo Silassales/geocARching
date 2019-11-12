@@ -16,6 +16,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.porpoise.geocarching.R
 import com.porpoise.geocarching.SplashActivity
 import com.porpoise.geocarching.Util.Constants
+import com.porpoise.geocarching.MainActivity
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
