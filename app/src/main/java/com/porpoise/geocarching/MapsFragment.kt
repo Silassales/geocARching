@@ -39,9 +39,12 @@ import org.imperiumlabs.geofirestore.GeoQuery
 import org.imperiumlabs.geofirestore.extension.setLocation
 import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
 import com.google.android.gms.maps.model.Marker
+import com.google.firebase.auth.FirebaseAuth
 import com.porpoise.geocarching.Util.Constants.DEFAULT_NEARBY_MODEL
 import com.porpoise.geocarching.Util.Constants.MARKER_NEARBY_MODEL_MAP
 import com.porpoise.geocarching.Util.BitmapUtil.bitmapDescriptorFromVector
+import com.porpoise.geocarching.firebaseObjects.User
+import com.porpoise.geocarching.firebaseObjects.UserPlacedCache
 
 
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
@@ -209,11 +212,11 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     override fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String) {
         // so if everything is in order.. we should have a latlng by now but ya idk maybe not
         addMarkerLatLng?.let {
-            addCacheToFirebase(cacheName, cacheDesc, cacheModel, it)
+            addPlacedCacheToFirebase(cacheName, cacheDesc, cacheModel, it)
         }
     }
 
-    private fun addCacheToFirebase(cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
+    private fun addPlacedCacheToFirebase(cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
         var model = 1
         when(cacheModel){
             "Model 1" -> model = 1
@@ -229,10 +232,11 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                 description = cacheDesc)
 
         FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).add(newCache).addOnSuccessListener {
+            addPlacedCacheToCurrentUser(it.id)
             val geoFirestore = GeoFirestore(FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)))
 
             geoFirestore.setLocation(it.id, GeoPoint(latLng.latitude, latLng.longitude)) { e ->
-                if(e != null) Log.d("addCacheToFirebase", "failed to add location to cache ${it.id}, exception: ${e.message}")
+                if(e != null) Log.d("addPlacedCacheToFirebase", "failed to add location to cache ${it.id}, exception: ${e.message}")
             }
         }
     }
@@ -321,6 +325,38 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         fun onFragmentInteraction(uri: Uri)
+    }
+
+    private fun addPlacedCacheToCurrentUser(placedCacheId: String) {
+        // TODO this could be cleaned up and separated into parts
+        val auth = FirebaseAuth.getInstance()
+        val firestore = FirebaseFirestore.getInstance()
+        auth.currentUser?.let { currentAuthUser ->
+            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
+                var currentUser: User? = null
+                var currentUserId = ""
+                for (currentUserSnapshot in currentUserSnapshots) {
+                    currentUser = currentUserSnapshot.toObject(User::class.java)
+                    currentUserId = currentUserSnapshot.id
+                }
+                currentUser?.let { safeCurrentUser ->
+                    firestore.collection(getString(R.string.firebase_collection_caches)).document(placedCacheId).get().addOnSuccessListener { placedSnapshot ->
+                        val placedCache = placedSnapshot.toObject(Cache::class.java)
+                        placedCache
+                                ?: Log.d("addPlacedCacheToCurrentUser", "Couldn't populate fields from snapshot: {${placedSnapshot.id}")
+                        placedCache?.let { safePlacedCache ->
+                            Log.d("addPlacedCacheToCurrentUser", "user: $safeCurrentUser placed cache: ${safePlacedCache.name}")
+                            val userPlacedCache = UserPlacedCache(placedCache.name, placedCache.l, placedCache.g)
+                            firestore.collection(getString(R.string.firebase_collection_users))
+                                    .document(currentUserId)
+                                    .collection(getString(R.string.firebase_collection_users_placed_caches))
+                                    .document(placedCacheId)
+                                    .set(userPlacedCache)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /*

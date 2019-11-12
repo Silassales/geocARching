@@ -18,3 +18,8 @@ data class User(val username: String = "",
 data class UserVisit(val name: String = "",
                      val l: GeoPoint = GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
                      val g: String = "")
+
+@IgnoreExtraProperties
+data class UserPlacedCache(val name: String = "",
+                     val l: GeoPoint = GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
+                     val g: String = "")
