@@ -5,6 +5,18 @@
     android:layout_height="match_parent"
     tools:context=".NavUI.Records.RecordsVisitsFragment">
 
+    <TextView
+        android:id="@+id/records_visits_loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="10dp"
+        android:textSize="34sp"
+        android:textStyle="italic"
+        android:gravity="center_horizontal"
+        android:text="@string/loading_message"
+        />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/records_visits_recycler_view"
         android:scrollbars="vertical"

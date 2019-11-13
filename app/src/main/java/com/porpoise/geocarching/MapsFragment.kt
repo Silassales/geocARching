@@ -116,9 +116,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             }
 
             safeGMap.setOnMarkerClickListener { marker ->
-                markerMap.asIterable().find { it.value == marker }?.let {
-                    marker.showInfoWindow()
-                }
+                marker.showInfoWindow()
 
                 true
             }

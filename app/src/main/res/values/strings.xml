@@ -20,6 +20,9 @@
     <string name="dialog_positive">Ok</string>
     <string name="dialog_negative">Cancel</string>
     <string name="add_marker_dialog_message">Add New Marker</string>
+    <string name="loading_message">Loading...</string>
+    <string name="no_visits">No visits found.</string>
+    <string name="no_placed_caches">No placed caches found.</string>
     <string name="add_marker_desc_hint">Description of cache</string>
     <string name="default_username">username</string>
     <string name="firebase_collection_users_visits">Visits</string>
