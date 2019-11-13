@@ -23,6 +23,13 @@
     <string name="add_marker_desc_hint">Description of cache</string>
     <string name="default_username">username</string>
     <string name="firebase_collection_users_visits">Visits</string>
+    <string name="map_title">Home</string>
+    <string name="profile_title">Profile</string>
+    <string name="records_title">Records</string>
+    <string name="settings_title">Settings</string>
+    <string name="about_title">About</string>
+    <string name="signout_title">Sign Out</string>
+
     <string name="firebase_collection_users_placed_caches">PlacedCaches</string>
     <string name="records_tab_visited_title">Visits</string>
     <string name="records_tab_placed_title">Placed</string>

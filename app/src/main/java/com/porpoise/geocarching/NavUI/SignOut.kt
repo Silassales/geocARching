@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.porpoise.geocarching.R
 import com.porpoise.geocarching.SplashActivity
 import com.porpoise.geocarching.Util.Constants.SIGN_OUT_MESSAGE
+import com.porpoise.geocarching.MainActivity
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -47,6 +48,8 @@ class SignOut : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
+        (activity as MainActivity).supportActionBar?.title = getString(R.string.signout_title)
+        
         val view: View = inflater.inflate(R.layout.fragment_sign_out, container, false)
 
         auth = FirebaseAuth.getInstance()

@@ -9,6 +9,8 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import com.porpoise.geocarching.R
+import com.porpoise.geocarching.firebaseObjects.UserVisit
+import com.porpoise.geocarching.MainActivity
 
 
 class Records : Fragment() {
@@ -18,6 +20,8 @@ class Records : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
+        (activity as MainActivity).supportActionBar?.title = getString(R.string.records_title)
+        
         val view: View = inflater.inflate(R.layout.fragment_records, container, false)
 
         tabLayout = view.findViewById(R.id.records_tab_layout)
