@@ -1,22 +1,24 @@
 package com.porpoise.geocarching.NavUI.CacheDetails
 
+import android.graphics.Typeface.NORMAL
 import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.porpoise.geocarching.R
-import com.porpoise.geocarching.firebaseObjects.User
 
 private const val ARG_PARAM1 = "key"
 
 class CacheDetailsFragment : Fragment() {
     private var key: String = ""
     private var listener: OnFragmentInteractionListener? = null
+    private lateinit var loadingText: TextView
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewAdapter: CacheDetailsAdapter
 
@@ -31,6 +33,7 @@ class CacheDetailsFragment : Fragment() {
                               savedInstanceState: Bundle?): View? {
         val view: View = inflater.inflate(R.layout.fragment_cache_details, null)
 
+        loadingText = view.findViewById(R.id.cache_details_loading)
         recyclerView = view.findViewById(R.id.cache_details_view)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(context)
@@ -38,8 +41,14 @@ class CacheDetailsFragment : Fragment() {
         recyclerView.adapter = viewAdapter
 
         FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(key).collection(getString(R.string.firebase_collection_users_visits)).get().addOnSuccessListener { visits ->
-            visits.forEach { visit ->
-                viewAdapter.addVisitToList(visit.getString(getString(R.string.default_username)).toString())
+            if(visits.isEmpty) {
+                loadingText.setTypeface(null, NORMAL)
+                loadingText.text = getString(R.string.no_visits)
+            } else {
+                loadingText.visibility = View.GONE
+                visits.forEach { visit ->
+                    viewAdapter.addVisitToList(visit.getString(getString(R.string.default_username)).toString())
+                }
             }
         }
 
