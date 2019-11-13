@@ -12,7 +12,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
+import androidx.navigation.findNavController
 
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
@@ -115,14 +117,17 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
 
             safeGMap.setOnMarkerClickListener { marker ->
                 markerMap.asIterable().find { it.value == marker }?.let {
-                    FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(it.key).get().addOnSuccessListener { result ->
-                        marker.title = result.getString("name")
-                        marker.snippet = result.getString("description")
-                        marker.showInfoWindow()
-                    }
+                    marker.showInfoWindow()
                 }
 
                 true
+            }
+
+            safeGMap.setOnInfoWindowClickListener {marker ->
+                markerMap.asIterable().find { it.value == marker }?.let {
+                    marker.hideInfoWindow()
+                    view?.findNavController()?.navigate(R.id.nav_cache_details, bundleOf("key" to it.key))
+                }
             }
 
             // set map UI settings
@@ -180,8 +185,10 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                     mMap?.let { safeMap ->
                         Log.d("cacheOnKeyEntered", "new cache found at $location with ID $documentID")
                         val marker = safeMap.addMarker(MarkerOptions().position(LatLng(location.latitude, location.longitude)))
+
                         markerMap[documentID] = marker
                         updateMarkerIcon(documentID, marker, nearby = false)
+                        updateInfoWindow(documentID, marker)
                     }
                 }
 
@@ -193,6 +200,13 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                     Log.e("GeoQueryEventListener", "Error with this query: $exception")
                 }
             })
+        }
+    }
+
+    private fun updateInfoWindow(documentID: String, marker: Marker) {
+        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener { cache ->
+            marker.title = cache.getString("name")
+            marker.snippet = cache.getString("description")
         }
     }
 
