@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.porpoise.geocarching.R
 import com.squareup.picasso.Picasso
+import com.porpoise.geocarching.MainActivity
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -51,6 +52,8 @@ class Profile : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
+        (activity as MainActivity).supportActionBar?.title = getString(R.string.profile_title)
+        
         val view: View = inflater.inflate(R.layout.fragment_profile, container, false)
         profilePicView = view.findViewById(R.id.profile_image_view)
         userFullNameTextView = view.findViewById(R.id.userfullname_text_view)

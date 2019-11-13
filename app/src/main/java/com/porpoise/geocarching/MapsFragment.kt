@@ -67,6 +67,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         val view: View = inflater.inflate(R.layout.fragment_maps, container, false)
 
         // first thing we wanna do is check permissions access
+        (activity as MainActivity).supportActionBar?.title = getString(R.string.map_title)
         if(!checkPermissionsAccess()) {
             requestPermissionsAccess()
         } else {

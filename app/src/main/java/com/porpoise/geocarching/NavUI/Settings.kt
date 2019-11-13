@@ -51,6 +51,7 @@ class Settings : Fragment() {
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         val view: View = inflater.inflate(R.layout.fragment_settings, container, false)
+        (activity as MainActivity).supportActionBar?.title = getString(R.string.settings_title)
 
         auth = FirebaseAuth.getInstance()
 
