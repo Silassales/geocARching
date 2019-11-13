@@ -40,5 +40,10 @@
         android:name="com.porpoise.geocarching.AR"
         android:label="Cache Viewer"
         tools:layout="@layout/fragment_ar" />
+    <fragment
+        android:id="@+id/nav_cache_details"
+        android:name="com.porpoise.geocarching.NavUI.CacheDetails.CacheDetailsFragment"
+        android:label="Cache Visits"
+        tools:layout="@layout/fragment_cache_details" />
 
 </navigation>
