@@ -3,7 +3,6 @@ package com.porpoise.geocarching
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
@@ -22,9 +21,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import com.porpoise.geocarching.firebaseObjects.Cache
-import com.porpoise.geocarching.firebaseObjects.User
-import com.porpoise.geocarching.firebaseObjects.UserVisit
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionListener {
@@ -62,7 +58,7 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
         val navController = findNavController(R.id.nav_host_fragment)
         appBarConfiguration = AppBarConfiguration(
                 setOf(
-                        R.id.nav_maps, R.id.nav_profile, R.id.nav_records, R.id.nav_settings, R.id.nav_about, R.id.nav_sign_out
+                        R.id.nav_maps, R.id.nav_profile, R.id.nav_records, R.id.nav_settings, R.id.nav_leaderboard, R.id.nav_sign_out
                 ), drawerLayout
         )
 

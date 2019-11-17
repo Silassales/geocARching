@@ -51,9 +51,6 @@ class Profile : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
-        (activity as MainActivity).supportActionBar?.title = getString(R.string.profile_title)
-        
         val view: View = inflater.inflate(R.layout.fragment_profile, container, false)
         profilePicView = view.findViewById(R.id.profile_image_view)
         userFullNameTextView = view.findViewById(R.id.userfullname_text_view)

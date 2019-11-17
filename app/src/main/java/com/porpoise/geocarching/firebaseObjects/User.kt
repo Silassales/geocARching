@@ -23,3 +23,7 @@ data class UserVisit(val name: String = "",
 data class UserPlacedCache(val name: String = "",
                      val l: GeoPoint = GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
                      val g: String = "")
+
+@IgnoreExtraProperties
+data class LeaderboardUser(val username: String = "",
+                           val level: Int = 0)

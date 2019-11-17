@@ -8,42 +8,42 @@
     <fragment
         android:id="@+id/nav_maps"
         android:name="com.porpoise.geocarching.MapsFragment"
-        android:label="fragment_maps"
+        android:label="@string/map_title"
         tools:layout="@layout/fragment_maps" />
     <fragment
         android:id="@+id/nav_profile"
         android:name="com.porpoise.geocarching.NavUI.Profile"
-        android:label="fragment_profile"
+        android:label="@string/profile_title"
         tools:layout="@layout/fragment_profile" />
     <fragment
         android:id="@+id/nav_records"
         android:name="com.porpoise.geocarching.NavUI.Records.Records"
-        android:label="fragment_records"
+        android:label="@string/records_title"
         tools:layout="@layout/fragment_records" />
     <fragment
         android:id="@+id/nav_settings"
         android:name="com.porpoise.geocarching.NavUI.Settings"
-        android:label="fragment_settings"
+        android:label="@string/settings_title"
         tools:layout="@layout/fragment_settings" />
     <fragment
-        android:id="@+id/nav_about"
-        android:name="com.porpoise.geocarching.NavUI.About"
-        android:label="fragment_about"
-        tools:layout="@layout/fragment_about" />
+        android:id="@+id/nav_leaderboard"
+        android:name="com.porpoise.geocarching.NavUI.Leaderboards.Leaderboards"
+        android:label="@string/leaderboards_title"
+        tools:layout="@layout/fragment_leaderboards" />
     <fragment
         android:id="@+id/nav_sign_out"
         android:name="com.porpoise.geocarching.NavUI.SignOut"
-        android:label="fragment_sign_out"
+        android:label="@string/signout_title"
         tools:layout="@layout/fragment_sign_out" />
     <fragment
         android:id="@+id/AR"
         android:name="com.porpoise.geocarching.AR"
-        android:label="Cache Viewer"
+        android:label="@string/ar_title"
         tools:layout="@layout/fragment_ar" />
     <fragment
         android:id="@+id/nav_cache_details"
         android:name="com.porpoise.geocarching.NavUI.CacheDetails.CacheDetailsFragment"
-        android:label="Cache Visits"
+        android:label="@string/cache_details_title"
         tools:layout="@layout/fragment_cache_details" />
 
 </navigation>
