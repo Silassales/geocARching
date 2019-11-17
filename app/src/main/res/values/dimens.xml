@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="leaderboard_list_height">64dp</dimen>
+    <dimen name="leaderboard_list_position_text_view_width">32dp</dimen>
+    <dimen name="leaderboards_text_size">20sp</dimen>
+    <dimen name="leaderboard_padding">16dp</dimen>
+</resources>

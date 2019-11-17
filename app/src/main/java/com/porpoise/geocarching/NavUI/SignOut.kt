@@ -47,9 +47,6 @@ class SignOut : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        // Inflate the layout for this fragment
-        (activity as MainActivity).supportActionBar?.title = getString(R.string.signout_title)
-        
         val view: View = inflater.inflate(R.layout.fragment_sign_out, container, false)
 
         auth = FirebaseAuth.getInstance()

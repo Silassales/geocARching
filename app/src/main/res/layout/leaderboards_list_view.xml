@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardUseCompatPadding="true"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="3dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/leaderboards_constraint_layout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/leaderboard_list_height"
+        android:background="?android:attr/selectableItemBackground"
+        android:focusable="true"
+        android:padding="@dimen/leaderboard_padding"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/leaderboards_position_text_view"
+            android:layout_width="@dimen/leaderboard_list_position_text_view_width"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical|center_horizontal"
+            android:textSize="@dimen/leaderboards_text_size"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/leaderboards_username_text_view"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/leaderboard_padding"
+            android:paddingEnd="@dimen/leaderboard_padding"
+            android:gravity="center_vertical|start"
+            android:textSize="@dimen/leaderboards_text_size"
+            android:textStyle="bold"
+            android:scrollHorizontally="true"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:layout_constraintHorizontal_bias="0"
+            app:layout_constraintStart_toEndOf="@+id/leaderboards_position_text_view"
+            app:layout_constraintEnd_toStartOf="@id/leaderboards_level_text_view"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/leaderboards_level_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical|end"
+            android:textSize="@dimen/leaderboards_text_size"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>

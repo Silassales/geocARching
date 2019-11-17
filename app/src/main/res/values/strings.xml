@@ -4,7 +4,7 @@
     <string name="menu_profile">PROFILE</string>
     <string name="menu_records">RECORDS</string>
     <string name="menu_settings">SETTINGS</string>
-    <string name="menu_about">ABOUT</string>
+    <string name="menu_leaderboard">LEADERBOARD</string>
     <string name="menu_sign_out">SIGN OUT</string>
 
 
@@ -17,10 +17,10 @@
     <string name="firebase_users_uid">uid</string>
     <string name="firebase_collection_users">Users</string>
     <string name="add_marker_name_hint">Name of cache</string>
-    <string name="dialog_positive">Ok</string>
+    <string name="dialog_positive">OK</string>
     <string name="dialog_negative">Cancel</string>
     <string name="add_marker_dialog_message">Add New Marker</string>
-    <string name="loading_message">Loading...</string>
+    <string name="loading_message">Loading…</string>
     <string name="no_visits">No visits found.</string>
     <string name="no_placed_caches">No placed caches found.</string>
     <string name="add_marker_desc_hint">Description of cache</string>
@@ -30,7 +30,7 @@
     <string name="profile_title">Profile</string>
     <string name="records_title">Records</string>
     <string name="settings_title">Settings</string>
-    <string name="about_title">About</string>
+    <string name="leaderboards_title">Leaderboard</string>
     <string name="signout_title">Sign Out</string>
 
     <string name="firebase_collection_users_placed_caches">PlacedCaches</string>
@@ -39,6 +39,10 @@
 
     <string name="ar_cache_dialog_unvisited">Congratulations, you\'ve found a cache!</string>
     <string name="ar_cache_dialog_visited">You\'ve already found this cache!</string>
+    <string name="ar_title">Cache Viewer</string>
+    <string name="cache_details_title">Cache Visits</string>
+    <string name="firebase_users_level">level</string>
+    <string name="no_users">Leaderboard is empty…</string>
 
     <string-array name="cache_model_array">
         <item>Model 1</item>
