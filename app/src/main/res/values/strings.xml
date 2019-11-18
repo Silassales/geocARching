@@ -7,9 +7,6 @@
     <string name="menu_leaderboard">LEADERBOARD</string>
     <string name="menu_sign_out">SIGN OUT</string>
 
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="menu_maps">MAPS</string>
     <string name="firebase_collection_caches">Caches</string>
     <string name="sign_out">Sign Out</string>
@@ -37,6 +34,9 @@
     <string name="records_tab_visited_title">Visits</string>
     <string name="records_tab_placed_title">Placed</string>
 
+    <string name="maps_fab_snackbar_unset_location_message">Finding user location…</string>
+    <string name="maps_fab_snackbar_place_cache_message">There\'s no cache nearby…</string>
+    <string name="maps_fab_snackbar_place_cache_option">PLACE CACHE</string>
     <string name="ar_cache_dialog_unvisited">Congratulations, you\'ve found a cache!</string>
     <string name="ar_cache_dialog_visited">You\'ve already found this cache!</string>
     <string name="ar_title">Cache Viewer</string>
