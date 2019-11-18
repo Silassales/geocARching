@@ -48,20 +48,17 @@ import com.porpoise.geocarching.Util.BitmapUtil.bitmapDescriptorFromVector
 import com.porpoise.geocarching.firebaseObjects.User
 import com.porpoise.geocarching.firebaseObjects.UserPlacedCache
 
-
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
-
-
     private var fusedLocationProviderClient: FusedLocationProviderClient? = null
     private var locationCallback: LocationCallback? = null
     private var mMap: GoogleMap? = null
     private var geoQuery: GeoQuery? = null
     private var markerMap: MutableMap<String, Marker> = mutableMapOf()
-    private var addMarkerLatLng: LatLng? = null
 
     // used to publicly access the cache nearbyCacheId
     companion object {
         var nearbyCacheId: String? = null
+        var userLocation: Location? = null
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -99,21 +96,10 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     }
 
     override fun onMapReady(googleMap: GoogleMap?) {
-        // need this to call dialog
-        val thisFragment = this
         googleMap?.let { safeGMap ->
             // set the map style
             safeGMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.style_json))
             safeGMap.setMinZoomPreference(17.0f)
-
-            // set the click listener for adding user caches
-            safeGMap.setOnMapLongClickListener { latLong ->
-                // Create an instance of the dialog fragment and show it
-                addMarkerLatLng = latLong
-                val dialog = AddMarkerFragment()
-                dialog.setTargetFragment(thisFragment, 0)
-                fragmentManager?.let { fm -> dialog.show(fm, "add_friend_dialog")  }
-            }
 
             safeGMap.setOnMarkerClickListener { marker ->
                 marker.showInfoWindow()
@@ -187,6 +173,9 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                         markerMap[documentID] = marker
                         updateMarkerIcon(documentID, marker, nearby = false)
                         updateInfoWindow(documentID, marker)
+                        userLocation?.let {
+                            setNearbyCache(Location(userLocation))
+                        }
                     }
                 }
 
@@ -222,11 +211,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         }
     }
 
-    override fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String) {
-        // so if everything is in order.. we should have a latlng by now but ya idk maybe not
-        addMarkerLatLng?.let {
-            addPlacedCacheToFirebase(cacheName, cacheDesc, cacheModel, it)
-        }
+    override fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
+        addPlacedCacheToFirebase(cacheName, cacheDesc, cacheModel, latLng)
     }
 
     private fun addPlacedCacheToFirebase(cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
@@ -283,6 +269,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         mMap ?: Log.e("UpdateMapLocation", "null mMap")
         mMap?.moveCamera(CameraUpdateFactory.newLatLng(LatLng(location.latitude, location.longitude)))
         updateCacheMarkerListeners(location)
+
+        userLocation = Location(location)
 
         setNearbyCache(location)
     }
