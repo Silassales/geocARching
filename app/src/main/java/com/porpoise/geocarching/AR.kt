@@ -80,10 +80,7 @@ class AR : Fragment() {
 
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
             firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
-                var currentUserId = ""
-                for (currentUserSnapshot in currentUserSnapshots) {
-                    currentUserId = currentUserSnapshot.id
-                }
+                var currentUserId = currentUserSnapshots.first().id
                 firestore.collection(getString(R.string.firebase_collection_users))
                     .document(currentUserId).collection(getString(R.string.firebase_collection_users_visits)).get().addOnSuccessListener { visitedCacheSnapshots ->
                         MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
@@ -207,7 +204,7 @@ class AR : Fragment() {
                     MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
                         firestore.collection(getString(R.string.firebase_collection_caches))
                                 .document(nearbyCacheId)
-                                .collection(getString(R.string.firebase_collection_users_visits))
+                                .collection(getString(R.string.firebase_collection_found_caches))
                                 .document(currentUser.id)
                                 .set(hashMapOf(getString(R.string.default_username) to currentUser.getString(getString(R.string.default_username))), merge())
                     }

@@ -25,6 +25,7 @@
     <string name="no_placed_caches">No placed caches found.</string>
     <string name="add_marker_desc_hint">Description of cache</string>
     <string name="default_username">username</string>
+    <string name="firebase_collection_found_caches">FoundCaches</string>
     <string name="firebase_collection_users_visits">Visits</string>
     <string name="map_title">Home</string>
     <string name="profile_title">Profile</string>

@@ -40,7 +40,7 @@ class CacheDetailsFragment : Fragment() {
         viewAdapter = CacheDetailsAdapter()
         recyclerView.adapter = viewAdapter
 
-        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(key).collection(getString(R.string.firebase_collection_users_visits)).get().addOnSuccessListener { visits ->
+        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(key).collection(getString(R.string.firebase_collection_found_caches)).get().addOnSuccessListener { visits ->
             if(visits.isEmpty) {
                 loadingText.setTypeface(null, NORMAL)
                 loadingText.text = getString(R.string.no_visits)
