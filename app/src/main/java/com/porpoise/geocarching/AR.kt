@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import android.graphics.Point
+import android.net.Uri
 import android.util.Log
 import android.view.MotionEvent
 import com.github.jinatonic.confetti.CommonConfetti
@@ -24,6 +25,8 @@ import com.google.ar.sceneform.ux.TransformableNode
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.SetOptions.merge
+import com.porpoise.geocarching.Util.Constants.DEFAULT_MODEL
+import com.porpoise.geocarching.Util.Constants.MODEL_MAP
 import com.porpoise.geocarching.firebaseObjects.Cache
 import com.porpoise.geocarching.firebaseObjects.User
 import com.porpoise.geocarching.firebaseObjects.UserVisit
@@ -42,15 +45,21 @@ class AR : Fragment() {
         // set the arFragment
         arFragment = childFragmentManager.findFragmentById(R.id.ar_fragment) as? ArFragment ?: throw IllegalStateException("AR Fragment null onCreateView")
 
-        // set the cache model
-        ModelRenderable.builder()
-            .setSource(arFragment.context, R.raw.andy)
-            .build()
-            .thenAccept { cacheRenderable = it }
-            .exceptionally {
-                Snackbar.make(view, it.message.toString(), Snackbar.LENGTH_LONG).show()
-                return@exceptionally null
+        MapsFragment.nearbyCacheId?.let { documentId ->
+            FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(documentId).get().addOnSuccessListener { cache ->
+                cache.toObject(Cache::class.java)?.let {safeCache ->
+                    // set the cache model
+                    ModelRenderable.builder()
+                        .setSource(arFragment.context, Uri.parse(MODEL_MAP[safeCache.model] ?: DEFAULT_MODEL))
+                        .build()
+                        .thenAccept { cacheRenderable = it }
+                        .exceptionally {
+                            Snackbar.make(view, it.message.toString(), Snackbar.LENGTH_LONG).show()
+                            return@exceptionally null
+                        }
+                }
             }
+        }
 
         // we want to try and place the cache at the centre on each update until it happens
         arFragment.arSceneView.scene.addOnUpdateListener(this::placeCacheAtScreenCentre)

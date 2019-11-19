@@ -20,7 +20,7 @@ import androidx.navigation.NavDestination
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.FirebaseFirestore
+import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionListener {
@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var auth: FirebaseAuth
-    private lateinit var firestore: FirebaseFirestore
     lateinit var profilePicView: ImageView
     lateinit var usernameTextView: TextView
 
@@ -68,15 +67,27 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
         val floatingActionButton: FloatingActionButton = findViewById(R.id.fab)
 
         floatingActionButton.setOnClickListener {
+            if (MapsFragment.userLocation == null) {
+                Snackbar.make(it, getString(R.string.maps_fab_snackbar_unset_location_message), Snackbar.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
             if (MapsFragment.nearbyCacheId == null) {
-                // give an alert if we're not near a cache
-                Snackbar.make(it, "No cache nearby, go and find one!", Snackbar.LENGTH_LONG).show()
+                // give an alert if we're not near a cache with option to place cache
+                Snackbar.make(it, getString(R.string.maps_fab_snackbar_place_cache_message), Snackbar.LENGTH_LONG).setAction(getString(R.string.maps_fab_snackbar_place_cache_option)){
+                    val dialog = AddMarkerFragment()
+                    supportFragmentManager.findFragmentById(R.id.nav_host_fragment)?.let {navFragment ->
+                        val mapsFragment = navFragment.childFragmentManager.fragments[0]
+
+                        dialog.setTargetFragment(mapsFragment, 0)
+                        mapsFragment.fragmentManager?.let { fm -> dialog.show(fm, "place_cache_dialog")  }
+                    }
+                }.show()
             } else {
                 // navigate if we're near a cache
                 navController.navigate(R.id.AR)
             }
         }
-
 
         // add a listener to hide the fab when opening the cache viewer and to show it when leaving
         navController.addOnDestinationChangedListener { _: NavController, destination: NavDestination, _: Bundle? ->

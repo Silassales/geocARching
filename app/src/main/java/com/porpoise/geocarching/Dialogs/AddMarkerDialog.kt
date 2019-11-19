@@ -9,6 +9,8 @@ import android.widget.Spinner
 
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
+import com.google.android.gms.maps.model.LatLng
+import com.porpoise.geocarching.MapsFragment
 import com.porpoise.geocarching.R
 
 
@@ -20,7 +22,7 @@ class AddMarkerFragment : DialogFragment() {
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
     interface AddMarkerDialogListener {
-        fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String)
+        fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng)
         fun onDialogNegativeClick(dialog: DialogFragment)
     }
 
@@ -32,7 +34,6 @@ class AddMarkerFragment : DialogFragment() {
         } catch (e: ClassCastException) {
             throw ClassCastException("Calling Fragment must implement AddMarkerDialogListener")
         }
-
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -57,15 +58,18 @@ class AddMarkerFragment : DialogFragment() {
                 }
             }
 
+            // set the latLng now so that geoDrift doesn't affect the placed location
+            val userLocation = MapsFragment.userLocation
+
             builder.setView(dialogView)
                     .setMessage(R.string.add_marker_dialog_message)
-                    .setPositiveButton(R.string.dialog_positive
-                    ) { dialog, id ->
+                    .setPositiveButton(R.string.dialog_positive) { _, _ ->
                         // Send the positive button event back to the host activity
-                        listener.onDialogPositiveClick(this, nameTextView.text.toString(), descEditText.text.toString(), spinner.selectedItem.toString())
+                        userLocation?.let { location ->
+                            listener.onDialogPositiveClick(this, nameTextView.text.toString(), descEditText.text.toString(), spinner.selectedItem.toString(), LatLng(location.latitude, location.longitude))
+                        }
                     }
-                    .setNegativeButton(R.string.dialog_negative
-                    ) { dialog, id ->
+                    .setNegativeButton(R.string.dialog_negative) { _, _ ->
                         // Send the negative button event back to the host activity
                         listener.onDialogNegativeClick(this)
                     }

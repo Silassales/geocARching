@@ -12,19 +12,26 @@ object Constants {
     const val LOCATION_UPDATE_INTERVAL = 3 * 1000 // 3 secs
     const val LOCATION_UPDATE_FASTEST_INTERVAL = 1000 // 1 sec
 
-    const val DEFAULT_MODEL = R.drawable.marker_1
-    val MARKER_MODEL_MAP = hashMapOf(
+    const val DEFAULT_MARKER = R.drawable.marker_1
+    val MARKER_MAP = hashMapOf(
             1 to R.drawable.marker_1,
             2 to R.drawable.marker_2,
             3 to R.drawable.marker_3,
             4 to R.drawable.marker_4
     )
-    const val DEFAULT_NEARBY_MODEL = R.drawable.marker_1_nearby
-    val MARKER_NEARBY_MODEL_MAP = hashMapOf(
+    const val DEFAULT_NEARBY_MARKER = R.drawable.marker_1_nearby
+    val NEARBY_MARKER_MAP = hashMapOf(
             1 to R.drawable.marker_1_nearby,
             2 to R.drawable.marker_2_nearby,
             3 to R.drawable.marker_3_nearby,
             4 to R.drawable.marker_4_nearby
+    )
+    const val DEFAULT_MODEL = "andy.sfb"
+    val MODEL_MAP = hashMapOf(
+            1 to "andy.sfb",
+            2 to "cactus.sfb",
+            3 to "pepper.sfb",
+            4 to "car.sfb"
     )
 
     // google sign in
