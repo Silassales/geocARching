@@ -11,7 +11,6 @@
     <string name="firebase_collection_caches">Caches</string>
     <string name="sign_out">Sign Out</string>
     <string name="disconnect_account">Disconnect Account</string>
-    <string name="firebase_users_uid">uid</string>
     <string name="firebase_collection_users">Users</string>
     <string name="add_marker_name_hint">Name of cache</string>
     <string name="dialog_positive">OK</string>
@@ -22,6 +21,7 @@
     <string name="no_placed_caches">No placed caches found.</string>
     <string name="add_marker_desc_hint">Description of cache</string>
     <string name="default_username">username</string>
+    <string name="firebase_collection_found_caches">FoundCaches</string>
     <string name="firebase_collection_users_visits">Visits</string>
     <string name="map_title">Home</string>
     <string name="profile_title">Profile</string>

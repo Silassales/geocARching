@@ -46,22 +46,21 @@ class RecordsPlacedFragment : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
 
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
-                firestore.collection(getString(R.string.firebase_collection_users))
-                        .document(currentUserSnapshots.first().id).collection(getString(R.string.firebase_collection_users_placed_caches)).get().addOnSuccessListener { placedCacheSnapshots ->
-                            if(placedCacheSnapshots.isEmpty) {
-                                loadingText.setTypeface(null, NORMAL)
-                                loadingText.text = getString(R.string.no_placed_caches)
-                            } else {
-                                loadingText.visibility = View.GONE
-                                recordsPlacedAdapter.setUserPlacedList(placedCacheSnapshots.toObjects(UserPlacedCache::class.java))
-                            }
-
-                            Log.d("getCurrentUsersPlacedCaches", "found some placed caches for ${currentUserSnapshots.first().id}, # of placed: ${placedCacheSnapshots.size()}")
+            firestore.collection(getString(R.string.firebase_collection_users))
+                    .document(currentAuthUser.uid)
+                    .collection(getString(R.string.firebase_collection_users_placed_caches))
+                    .get()
+                    .addOnSuccessListener { placedCacheSnapshots ->
+                        if(placedCacheSnapshots.isEmpty) {
+                            loadingText.setTypeface(null, NORMAL)
+                            loadingText.text = getString(R.string.no_placed_caches)
+                        } else {
+                            loadingText.visibility = View.GONE
+                            recordsPlacedAdapter.setUserPlacedList(placedCacheSnapshots.toObjects(UserPlacedCache::class.java))
                         }
-            }
+
+                        Log.d("getCurrentUsersPlacedCaches", "found some placed caches for ${currentAuthUser.uid}, # of placed: ${placedCacheSnapshots.size()}")
+                    }
         }
     }
-
-
 }

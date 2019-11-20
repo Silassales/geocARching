@@ -44,20 +44,21 @@ class RecordsVisitsFragment : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
 
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
-                firestore.collection(getString(R.string.firebase_collection_users))
-                        .document(currentUserSnapshots.first().id).collection(getString(R.string.firebase_collection_users_visits)).get().addOnSuccessListener { visitedCacheSnapshots ->
-                            if(visitedCacheSnapshots.isEmpty) {
-                                loadingText.setTypeface(null, NORMAL)
-                                loadingText.text = getString(R.string.no_visits)
-                            } else {
-                                loadingText.visibility = View.GONE
-                                viewVisitsAdapter.setUserVisitList(visitedCacheSnapshots.toObjects(UserVisit::class.java))
-                            }
+            firestore.collection(getString(R.string.firebase_collection_users))
+                .document(currentAuthUser.uid)
+                .collection(getString(R.string.firebase_collection_users_visits))
+                .get()
+                .addOnSuccessListener { visitedCacheSnapshots ->
+                    if(visitedCacheSnapshots.isEmpty) {
+                        loadingText.setTypeface(null, NORMAL)
+                        loadingText.text = getString(R.string.no_visits)
+                    } else {
+                        loadingText.visibility = View.GONE
+                        viewVisitsAdapter.setUserVisitList(visitedCacheSnapshots.toObjects(UserVisit::class.java))
+                    }
 
-                            Log.d("getCurrentUsersVists", "found some visits for ${currentUserSnapshots.first().id}, # of visits: ${visitedCacheSnapshots.size()}")
-                        }
-            }
+                    Log.d("getCurrentUsersVists", "found some visits for ${currentAuthUser.uid}, # of visits: ${visitedCacheSnapshots.size()}")
+                }
         }
     }
 
