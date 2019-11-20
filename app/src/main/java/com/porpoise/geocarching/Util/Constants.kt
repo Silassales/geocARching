@@ -1,6 +1,10 @@
 package com.porpoise.geocarching.Util
 
+import com.google.common.math.IntMath.pow
 import com.porpoise.geocarching.R
+import kotlin.math.floor
+import kotlin.math.round
+import kotlin.math.sqrt
 
 object Constants {
     // Guelph
@@ -53,4 +57,41 @@ object Constants {
     // Users
     const val STARTING_LEVEL = 0
     const val STARTING_EXPERIENCE = 0
+    const val DEFAULT_CACHE_VISIT_XP = 50L
+}
+
+class Leveling {
+    companion object {
+        fun getLevelFromXP(XP: Long) : Int {
+            /*
+             Current formula for xp is an exponential/sqrt relationship so there is progression ->
+             for ex. xp needed for level 1 -> 50xp - 1 cache
+                     xp needed for level 2 -> 150xp - 2 more caches
+                                         3 -> 300xp - 3 more
+                                         4 -> 500xp - 4 more
+                                         5 -> 750xp - 5 more
+
+                Formula is: (sqrt(625 + 100XP) - 25) / 50
+             */
+            return floor(((sqrt(625 + 100*XP.toDouble()) - 25) / 50)).toInt()
+        }
+
+        /* returns a value between 0-100 representing the progress to go till the next level
+        * Doesn't validate so if you give it bad data you will get bad data
+        * */
+        fun getProgressToNextLevel(currentLevel: Int, currentXP: Int) : Int {
+            /*
+                Rearranged for XP we get: ((50y + 25)^2 - 25) / 100 where y is the level
+             */
+
+            val nextLevelXp = (pow((50*(currentLevel + 1) + 25), 2) - 625) / 100
+            val currentLevelXp = (pow((50*currentLevel + 25), 2) - 625) / 100
+
+            val xpDelta = nextLevelXp - currentLevelXp
+            val xpSinceLastLevelUp = currentXP - currentLevelXp
+
+            // weird casts to avoid int division
+            return ((xpSinceLastLevelUp.toDouble() / xpDelta.toDouble()) * 100).toInt()
+        }
+    }
 }
