@@ -134,7 +134,7 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
         val uid = currentUser?.uid
         Log.d("populateUserCollectionWithLoggedInUser", "checking if user with uid $uid has an account, and if not creating one for them")
         db.collection(getString(R.string.firebase_collection_users)).document(uid.toString()).get().addOnSuccessListener {
-            if(!it.exists()) {
+            if(it.exists()) {
                 val newUser = User(
                     currentUser?.displayName ?: getString(R.string.default_username),
                     currentUser?.email ?: "",
@@ -142,7 +142,7 @@ class SplashActivity : AppCompatActivity(), View.OnClickListener {
                     STARTING_LEVEL
                 )
 
-                db.collection("Users").document(uid.toString()).set(newUser)
+                db.collection(getString(R.string.firebase_collection_users)).document(uid.toString()).set(newUser)
             }
         }
     }
