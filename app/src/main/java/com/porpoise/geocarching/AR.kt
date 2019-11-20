@@ -24,8 +24,12 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.SetOptions.merge
+import com.porpoise.geocarching.Util.Constants
 import com.porpoise.geocarching.Util.Constants.DEFAULT_MODEL
 import com.porpoise.geocarching.Util.Constants.MODEL_MAP
+import com.porpoise.geocarching.Util.Leveling
 import com.porpoise.geocarching.firebaseObjects.Cache
 import com.porpoise.geocarching.firebaseObjects.User
 import com.porpoise.geocarching.firebaseObjects.UserVisit
@@ -188,11 +192,41 @@ class AR : Fragment() {
                                         }
 
                                         isCacheVisited = true
+
+                                        addXPToCurrentUser(Constants.DEFAULT_CACHE_VISIT_XP)
                                     }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun addXPToCurrentUser(amount: Long) {
+        val firestore = FirebaseFirestore.getInstance()
+
+        FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
+            firestore.collection(getString(R.string.firebase_collection_users)).document(currentAuthUser.uid).get().addOnSuccessListener { currentUser ->
+                val currentUserId = currentUser.id
+                val currentLevel: Int = (currentUser[getString(R.string.firebase_collection_users_level)] as Long).toInt()
+                var currentXP: Long = currentUser[getString(R.string.firebase_collection_users_experience)] as Long
+
+                firestore.collection(getString(R.string.firebase_collection_users))
+                        .document(currentUserId)
+                        .update(getString(R.string.firebase_collection_users_experience), FieldValue.increment(amount)).addOnSuccessListener {
+                            // see if we have levelled up!
+                            currentXP += Constants.DEFAULT_CACHE_VISIT_XP
+                            val newLevel = Leveling.getLevelFromXP(currentXP)
+
+                            if(newLevel > currentLevel) {
+                                firestore.collection(getString(R.string.firebase_collection_users))
+                                        .document(currentUserId)
+                                        .update(getString(R.string.firebase_collection_users_level), newLevel).addOnSuccessListener {
+                                            view?.let{ safeView -> Snackbar.make(safeView, getString(R.string.level_up_snacker_bar_message, newLevel), Snackbar.LENGTH_LONG).show() }
+                                        }
+                            }
+                        }
             }
         }
     }

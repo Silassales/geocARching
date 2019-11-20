@@ -4,4 +4,5 @@
     <dimen name="leaderboard_list_position_text_view_width">32dp</dimen>
     <dimen name="leaderboards_text_size">20sp</dimen>
     <dimen name="leaderboard_padding">16dp</dimen>
+    <dimen name="profile_level_text_views_start_end">16dp</dimen>
 </resources>

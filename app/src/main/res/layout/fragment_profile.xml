@@ -132,7 +132,7 @@
             android:background="#ff9703" />
 
         <RelativeLayout
-            android:id="@+id/LocationView"
+            android:id="@+id/LevelView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/viewsep2"
@@ -145,21 +145,23 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_centerHorizontal="true"/>
+
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_alignRight="@id/strut3"
                 android:layout_alignParentLeft="true"
-                android:text="Location"
-                android:textSize="26sp"/>
+                android:text="@string/profile_text_view_level"
+                android:textSize="26sp" />
+
             <TextView
-                android:id="@+id/location2"
+                android:id="@+id/profile_level_text_view"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_alignLeft="@id/strut3"
                 android:layout_alignParentRight="true"
-                android:text="Location"
-                android:textSize="26sp"/>
+                android:text="@string/profile_defualt_level"
+                android:textSize="26sp" />
 
         </RelativeLayout>
 
@@ -168,12 +170,12 @@
             android:layout_width="fill_parent"
             android:layout_height="2dp"
             android:layout_alignParentRight="true"
-            android:layout_below="@+id/LocationView"
+            android:layout_below="@+id/LevelView"
             android:layout_marginTop="20dp"
             android:background="#ff9703" />
 
         <RelativeLayout
-            android:id="@+id/passwordView"
+            android:id="@+id/experienceView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/viewsep3"
@@ -186,21 +188,23 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:layout_centerHorizontal="true"/>
+
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_alignRight="@id/strut4"
                 android:layout_alignParentLeft="true"
-                android:text="Password"
-                android:textSize="26sp"/>
+                android:text="@string/profile_text_view_experience"
+                android:textSize="26sp" />
+
             <TextView
-                android:id="@+id/password2"
+                android:id="@+id/profile_experience_text_view"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_alignLeft="@id/strut4"
                 android:layout_alignParentRight="true"
-                android:text="**********"
-                android:textSize="26sp"/>
+                android:text="@string/profile_defualt_experience"
+                android:textSize="26sp" />
 
         </RelativeLayout>
 
@@ -209,28 +213,49 @@
             android:layout_width="fill_parent"
             android:layout_height="2dp"
             android:layout_alignParentRight="true"
-            android:layout_below="@+id/passwordView"
+            android:layout_below="@+id/experienceView"
             android:layout_marginTop="20dp"
             android:background="#ff9703" />
 
-        <RelativeLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/view4"
-            android:layout_marginTop="83dp"
-            android:layout_marginBottom="83dp">
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp">
 
-            <Button
-                android:id="@+id/update_profile"
+            <TextView
+                android:id="@+id/profile_current_level_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
+                android:text="@string/profile_default_start_level"
+                android:paddingStart="@dimen/profile_level_text_views_start_end"
+                android:paddingEnd="@dimen/profile_level_text_views_start_end"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                />
 
-                android:text="UPDATE PROFILE"
-                android:textSize="20dp" />
+            <ProgressBar
+                android:id="@+id/profile_level_progress_bar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:progressTint="#25C71B"
+                app:layout_constraintEnd_toStartOf="@+id/profile_next_level_text_view"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toEndOf="@+id/profile_current_level_text_view"
+                app:layout_constraintTop_toTopOf="parent" />
 
-
-        </RelativeLayout>
+            <TextView
+                android:id="@+id/profile_next_level_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/profile_default_next_level"
+                android:paddingStart="@dimen/profile_level_text_views_start_end"
+                android:paddingEnd="@dimen/profile_level_text_views_start_end"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     </RelativeLayout>

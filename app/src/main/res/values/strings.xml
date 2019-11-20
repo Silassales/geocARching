@@ -43,6 +43,15 @@
     <string name="cache_details_title">Cache Visits</string>
     <string name="firebase_users_level">level</string>
     <string name="no_users">Leaderboard is empty…</string>
+    <string name="firebase_collection_users_experience">experience</string>
+    <string name="firebase_collection_users_level">level</string>
+    <string name="level_up_snacker_bar_message">You are now level %d! Nice work!</string>
+    <string name="profile_text_view_level">Level</string>
+    <string name="profile_defualt_level">0</string>
+    <string name="profile_defualt_experience">0</string>
+    <string name="profile_text_view_experience">Total XP</string>
+    <string name="profile_default_start_level">0</string>
+    <string name="profile_default_next_level">1</string>
 
     <string-array name="cache_model_array">
         <item>Model 1</item>
