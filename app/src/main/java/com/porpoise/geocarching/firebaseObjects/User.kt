@@ -9,7 +9,6 @@ import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
 @IgnoreExtraProperties
 data class User(val username: String = "",
                 val email: String = "",
-                val uid: String = "",
                 val experience: Int = 0,
                 val level: Int = 0
                 )

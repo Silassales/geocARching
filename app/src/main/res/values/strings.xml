@@ -11,7 +11,6 @@
     <string name="firebase_collection_caches">Caches</string>
     <string name="sign_out">Sign Out</string>
     <string name="disconnect_account">Disconnect Account</string>
-    <string name="firebase_users_uid">uid</string>
     <string name="firebase_collection_users">Users</string>
     <string name="add_marker_name_hint">Name of cache</string>
     <string name="dialog_positive">OK</string>

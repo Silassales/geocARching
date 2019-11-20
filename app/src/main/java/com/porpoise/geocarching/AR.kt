@@ -24,7 +24,6 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.SetOptions.merge
 import com.porpoise.geocarching.Util.Constants.DEFAULT_MODEL
 import com.porpoise.geocarching.Util.Constants.MODEL_MAP
 import com.porpoise.geocarching.firebaseObjects.Cache
@@ -41,12 +40,13 @@ class AR : Fragment() {
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
         val view: View = inflater.inflate(R.layout.fragment_ar, container, false)
+        val firestore = FirebaseFirestore.getInstance()
 
         // set the arFragment
         arFragment = childFragmentManager.findFragmentById(R.id.ar_fragment) as? ArFragment ?: throw IllegalStateException("AR Fragment null onCreateView")
 
         MapsFragment.nearbyCacheId?.let { documentId ->
-            FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(documentId).get().addOnSuccessListener { cache ->
+            firestore.collection(getString(R.string.firebase_collection_caches)).document(documentId).get().addOnSuccessListener { cache ->
                 cache.toObject(Cache::class.java)?.let {safeCache ->
                     // set the cache model
                     ModelRenderable.builder()
@@ -68,8 +68,7 @@ class AR : Fragment() {
 
         view.cache_details_fab.setOnClickListener{
             MapsFragment.nearbyCacheId?.let {
-                val cache = FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(it)
-                cache.get().addOnSuccessListener { result ->
+                firestore.collection(getString(R.string.firebase_collection_caches)).document(it).get().addOnSuccessListener { result ->
                     this.context?.let { context ->
                         val builder = AlertDialog.Builder(context)
                         builder.setMessage(result.get("description").toString())
@@ -88,20 +87,20 @@ class AR : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
 
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
-                var currentUserId = currentUserSnapshots.first().id
-                firestore.collection(getString(R.string.firebase_collection_users))
-                    .document(currentUserId).collection(getString(R.string.firebase_collection_users_visits)).get().addOnSuccessListener { visitedCacheSnapshots ->
-                        MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
-                            val cache = FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(nearbyCacheId)
+            firestore.collection(getString(R.string.firebase_collection_users))
+                .document(currentAuthUser.uid)
+                .collection(getString(R.string.firebase_collection_users_visits))
+                .get()
+                .addOnSuccessListener { visitedCacheSnapshots ->
+                    MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
+                        val cache = firestore.collection(getString(R.string.firebase_collection_caches)).document(nearbyCacheId)
 
-                            // if we can't find a cache
-                            if (visitedCacheSnapshots.find { it.id == cache.id } == null) {
-                                isCacheVisited = false
-                            }
+                        // if we can't find a cache
+                        if (visitedCacheSnapshots.find { it.id == cache.id } == null) {
+                            isCacheVisited = false
                         }
                     }
-            }
+                }
         }
     }
 
@@ -165,12 +164,8 @@ class AR : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
 
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
-                val currentUserSnapshot = currentUserSnapshots.last()
-
+            firestore.collection(getString(R.string.firebase_collection_users)).document(currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshot ->
                 val currentUser = currentUserSnapshot.toObject(User::class.java)
-                val currentUserId = currentUserSnapshot.id
-
                 currentUser.let {
                     MapsFragment.nearbyCacheId?.let {nearbyCacheId ->
                         firestore.collection(getString(R.string.firebase_collection_caches)).document(nearbyCacheId).get().addOnSuccessListener { visitedCacheSnapshot ->
@@ -180,9 +175,8 @@ class AR : Fragment() {
                             visitedCache ?: Log.e("addVisitToCurrentUser", "Couldn't populate fields from snapshot: {${visitedCacheSnapshot.id}")
                             visitedCache?.let {
                                 val visit = UserVisit(visitedCache.name, visitedCache.l, visitedCache.g)
-
                                 firestore.collection(getString(R.string.firebase_collection_users))
-                                    .document(currentUserId)
+                                    .document(currentAuthUser.uid)
                                     .collection(getString(R.string.firebase_collection_users_visits))
                                     .document(visitedCacheId)
                                     .set(visit)
@@ -207,15 +201,14 @@ class AR : Fragment() {
         val firestore = FirebaseFirestore.getInstance()
 
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
-                val currentUser = currentUserSnapshots.first()
+            firestore.collection(getString(R.string.firebase_collection_users)).document(currentAuthUser.uid).get().addOnSuccessListener { currentUser ->
                 currentUser?.let {
                     MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
                         firestore.collection(getString(R.string.firebase_collection_caches))
                                 .document(nearbyCacheId)
                                 .collection(getString(R.string.firebase_collection_found_caches))
                                 .document(currentUser.id)
-                                .set(hashMapOf(getString(R.string.default_username) to currentUser.getString(getString(R.string.default_username))), merge())
+                                .set(hashMapOf(getString(R.string.default_username) to currentUser.getString(getString(R.string.default_username))))
                     }
                 }
             }

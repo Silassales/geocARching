@@ -16,7 +16,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.porpoise.geocarching.R
 import com.porpoise.geocarching.SplashActivity
 import com.porpoise.geocarching.Util.Constants
-import com.porpoise.geocarching.MainActivity
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -68,14 +67,11 @@ class Settings : Fragment() {
     }
 
     private fun removeUserFromFirebase() {
-        val db = FirebaseFirestore.getInstance()
+        val firestore = FirebaseFirestore.getInstance()
+        val uid = auth.currentUser?.uid.toString()
 
-        db.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), auth.currentUser?.uid).get().addOnSuccessListener {
-            for ( document in it) {
-                Log.i("removeUserFromFirebase", "removing user: ${document.id}")
-                db.collection(getString(R.string.firebase_collection_users)).document(document.id).delete()
-            }
-
+        firestore.collection(getString(R.string.firebase_collection_users)).document(uid).delete().addOnSuccessListener {
+            Log.d("removeUserFromFirebase", "removing user: ${auth.currentUser?.uid}")
         }
 
         auth.currentUser?.delete()

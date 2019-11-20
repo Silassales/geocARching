@@ -32,6 +32,7 @@ class CacheDetailsFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val view: View = inflater.inflate(R.layout.fragment_cache_details, null)
+        val firestore = FirebaseFirestore.getInstance()
 
         loadingText = view.findViewById(R.id.cache_details_loading)
         recyclerView = view.findViewById(R.id.cache_details_view)
@@ -40,7 +41,11 @@ class CacheDetailsFragment : Fragment() {
         viewAdapter = CacheDetailsAdapter()
         recyclerView.adapter = viewAdapter
 
-        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(key).collection(getString(R.string.firebase_collection_found_caches)).get().addOnSuccessListener { visits ->
+        firestore.collection(getString(R.string.firebase_collection_caches))
+                .document(key)
+                .collection(getString(R.string.firebase_collection_found_caches))
+                .get()
+                .addOnSuccessListener { visits ->
             if(visits.isEmpty) {
                 loadingText.setTypeface(null, NORMAL)
                 loadingText.text = getString(R.string.no_visits)

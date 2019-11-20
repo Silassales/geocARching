@@ -45,7 +45,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.porpoise.geocarching.Util.Constants.DEFAULT_NEARBY_MARKER
 import com.porpoise.geocarching.Util.Constants.NEARBY_MARKER_MAP
 import com.porpoise.geocarching.Util.BitmapUtil.bitmapDescriptorFromVector
-import com.porpoise.geocarching.firebaseObjects.User
 import com.porpoise.geocarching.firebaseObjects.UserPlacedCache
 
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
@@ -191,14 +190,16 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     }
 
     private fun updateInfoWindow(documentID: String, marker: Marker) {
-        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener { cache ->
+        val firestore = FirebaseFirestore.getInstance()
+        firestore.collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener { cache ->
             marker.title = cache.getString("name")
             marker.snippet = cache.getString("description")
         }
     }
 
     private fun updateMarkerIcon(documentID: String, marker: Marker?, nearby: Boolean) {
-        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener {cache ->
+        val firestore = FirebaseFirestore.getInstance()
+        firestore.collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener {cache ->
             cache.toObject(Cache::class.java)?.let { safeCache ->
                 context?.let {safeContext ->
                     if(nearby) {
@@ -230,12 +231,13 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                 name = cacheName,
                 description = cacheDesc)
 
-        FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)).add(newCache).addOnSuccessListener {
-            addPlacedCacheToCurrentUser(it.id)
+        val firestore = FirebaseFirestore.getInstance()
+        firestore.collection(getString(R.string.firebase_collection_caches)).add(newCache).addOnSuccessListener { addedCache ->
+            addPlacedCacheToCurrentUser(addedCache.id)
             val geoFirestore = GeoFirestore(FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)))
 
-            geoFirestore.setLocation(it.id, GeoPoint(latLng.latitude, latLng.longitude)) { e ->
-                if(e != null) Log.d("addPlacedCacheToFirebase", "failed to add location to cache ${it.id}, exception: ${e.message}")
+            geoFirestore.setLocation(addedCache.id, GeoPoint(latLng.latitude, latLng.longitude)) { e ->
+                if(e != null) Log.d("addPlacedCacheToFirebase", "failed to add location to cache ${addedCache.id}, exception: ${e.message}")
             }
         }
     }
@@ -333,23 +335,16 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         val auth = FirebaseAuth.getInstance()
         val firestore = FirebaseFirestore.getInstance()
         auth.currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).whereEqualTo(getString(R.string.firebase_users_uid), currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshots ->
-                var currentUser: User? = null
-                var currentUserId = ""
-                for (currentUserSnapshot in currentUserSnapshots) {
-                    currentUser = currentUserSnapshot.toObject(User::class.java)
-                    currentUserId = currentUserSnapshot.id
-                }
+            firestore.collection(getString(R.string.firebase_collection_users)).document(currentAuthUser.uid).get().addOnSuccessListener { currentUser ->
                 currentUser?.let { safeCurrentUser ->
                     firestore.collection(getString(R.string.firebase_collection_caches)).document(placedCacheId).get().addOnSuccessListener { placedSnapshot ->
                         val placedCache = placedSnapshot.toObject(Cache::class.java)
-                        placedCache
-                                ?: Log.d("addPlacedCacheToCurrentUser", "Couldn't populate fields from snapshot: {${placedSnapshot.id}")
+                        placedCache ?: Log.d("addPlacedCacheToCurrentUser", "Couldn't populate fields from snapshot: {${placedSnapshot.id}")
                         placedCache?.let { safePlacedCache ->
                             Log.d("addPlacedCacheToCurrentUser", "user: $safeCurrentUser placed cache: ${safePlacedCache.name}")
                             val userPlacedCache = UserPlacedCache(placedCache.name, placedCache.l, placedCache.g)
                             firestore.collection(getString(R.string.firebase_collection_users))
-                                    .document(currentUserId)
+                                    .document(currentUser.id)
                                     .collection(getString(R.string.firebase_collection_users_placed_caches))
                                     .document(placedCacheId)
                                     .set(userPlacedCache)
