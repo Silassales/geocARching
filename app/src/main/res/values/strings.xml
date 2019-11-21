@@ -52,6 +52,14 @@
     <string name="profile_text_view_experience">Total XP</string>
     <string name="profile_default_start_level">0</string>
     <string name="profile_default_next_level">1</string>
+    <string name="cache_report">Report Cache</string>
+    <string name="report_cache_hint">Comments</string>
+    <string name="report_cache_positive">Report</string>
+    <string name="report_cache_title">Report Current Cache?</string>
+    <string name="report_cache_negative">Cancel</string>
+    <string name="developer_email">withoutporpoisecis4250@gmail.com</string>
+    <string name="report_cache_email_subject">REPORT CACHE: %s</string>
+    <string name="report_cache_body">Reporting cache [%s]. \n \n Comments:\n%s</string>
 
     <string-array name="cache_model_array">
         <item>Model 1</item>
