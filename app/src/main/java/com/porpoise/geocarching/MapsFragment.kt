@@ -91,6 +91,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         // we don't want to be update the user location if they close the app
         fusedLocationProviderClient?.removeLocationUpdates(locationCallback)
         geoQuery?.removeAllListeners()
+        mMap?.clear()
         markerMap.clear()
     }
 
@@ -104,13 +105,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                 marker.showInfoWindow()
 
                 true
-            }
-
-            safeGMap.setOnInfoWindowClickListener {marker ->
-                markerMap.asIterable().find { it.value == marker }?.let {
-                    marker.hideInfoWindow()
-                    view?.findNavController()?.navigate(R.id.nav_cache_details, bundleOf("key" to it.key))
-                }
             }
 
             // set map UI settings
@@ -194,6 +188,13 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         firestore.collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener { cache ->
             marker.title = cache.getString("name")
             marker.snippet = cache.getString("description")
+        }
+
+        mMap?.setOnInfoWindowClickListener { currentMarker ->
+            markerMap.asIterable().find { it.value == currentMarker }?.let {
+                currentMarker.hideInfoWindow()
+                view?.findNavController()?.navigate(R.id.nav_cache_details, bundleOf("key" to it.key))
+            }
         }
     }
 
@@ -374,7 +375,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when(requestCode) {
             MY_PERMISSIONS_REQUEST_ACCESS_LOCATION -> {
-
                 if((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED)) {
                     /* we could ask for permissions again, but in my testing this caused the app to crash and wasnt very user
                     friendly TODO add some feedback for the user if they decline
