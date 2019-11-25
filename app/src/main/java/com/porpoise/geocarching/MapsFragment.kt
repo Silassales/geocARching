@@ -287,16 +287,14 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         }
 
         nearestMarker?.let {
-            // update last nearest marker if it existed and isn't the same as the current nearest marker
-            nearbyCacheId?.let {
-                if(nearbyCacheId != nearestMarkerId) {
-                    updateMarkerIcon(it, markerMap[it], nearby = false)
-                }
-            }
-
             // highlight the nearby cache if it isn't the same
             nearestMarkerId?.let {
                 if(nearbyCacheId != nearestMarkerId) {
+                    // reset all markers before setting a new one green
+                    for(marker in markerMap) {
+                        updateMarkerIcon(marker.key, marker.value, nearby = false)
+                    }
+
                     updateMarkerIcon(it, nearestMarker, nearby = true)
                 }
             }
@@ -304,6 +302,10 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             nearbyCacheId = nearestMarkerId
         } ?: run {
             // reset, as there isn't always a nearby cache
+            for(marker in markerMap) {
+                updateMarkerIcon(marker.key, marker.value, nearby = false)
+            }
+
             nearbyCacheId = null
         }
     }
