@@ -93,7 +93,7 @@ class AR : Fragment() {
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
             firestore.collection(getString(R.string.firebase_collection_users))
                 .document(currentAuthUser.uid)
-                .collection(getString(R.string.firebase_collection_users_visits))
+                .collection(getString(R.string.firebase_collection_found_caches))
                 .get()
                 .addOnSuccessListener { visitedCacheSnapshots ->
                     MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
@@ -181,7 +181,7 @@ class AR : Fragment() {
                                 val visit = UserVisit(visitedCache.name, visitedCache.l, visitedCache.g)
                                 firestore.collection(getString(R.string.firebase_collection_users))
                                     .document(currentAuthUser.uid)
-                                    .collection(getString(R.string.firebase_collection_users_visits))
+                                    .collection(getString(R.string.firebase_collection_found_caches))
                                     .document(visitedCacheId)
                                     .set(visit)
                                     .addOnSuccessListener {
@@ -240,7 +240,7 @@ class AR : Fragment() {
                     MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
                         firestore.collection(getString(R.string.firebase_collection_caches))
                                 .document(nearbyCacheId)
-                                .collection(getString(R.string.firebase_collection_found_caches))
+                                .collection(getString(R.string.firebase_collection_cache_visits))
                                 .document(currentUser.id)
                                 .set(hashMapOf(getString(R.string.default_username) to currentUser.getString(getString(R.string.default_username))))
                     }

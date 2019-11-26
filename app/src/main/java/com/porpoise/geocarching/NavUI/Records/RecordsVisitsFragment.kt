@@ -46,7 +46,7 @@ class RecordsVisitsFragment : Fragment() {
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
             firestore.collection(getString(R.string.firebase_collection_users))
                 .document(currentAuthUser.uid)
-                .collection(getString(R.string.firebase_collection_users_visits))
+                .collection(getString(R.string.firebase_collection_found_caches))
                 .get()
                 .addOnSuccessListener { visitedCacheSnapshots ->
                     if(visitedCacheSnapshots.isEmpty) {

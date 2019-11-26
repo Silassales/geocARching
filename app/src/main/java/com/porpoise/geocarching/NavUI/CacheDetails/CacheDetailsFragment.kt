@@ -97,7 +97,7 @@ class CacheDetailsFragment : Fragment() {
 
         firestore.collection(getString(R.string.firebase_collection_caches))
                 .document(key)
-                .collection(getString(R.string.firebase_collection_found_caches))
+                .collection(getString(R.string.firebase_collection_cache_visits))
                 .get()
                 .addOnSuccessListener { visits ->
             if(visits.isEmpty) {
