@@ -20,7 +20,6 @@ import androidx.navigation.NavDestination
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionListener {
@@ -75,17 +74,11 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
             if (MapsFragment.nearbyCacheId == null) {
                 // give an alert if we're not near a cache with option to place cache
                 Snackbar.make(it, getString(R.string.maps_fab_snackbar_place_cache_message), Snackbar.LENGTH_LONG).setAction(getString(R.string.maps_fab_snackbar_place_cache_option)){
-                    val dialog = AddMarkerFragment()
-                    supportFragmentManager.findFragmentById(R.id.nav_host_fragment)?.let {navFragment ->
-                        val mapsFragment = navFragment.childFragmentManager.fragments[0]
-
-                        dialog.setTargetFragment(mapsFragment, 0)
-                        mapsFragment.fragmentManager?.let { fm -> dialog.show(fm, "place_cache_dialog")  }
-                    }
+                    navController.navigate(R.id.cacheplacer_fragment)
                 }.show()
             } else {
                 // navigate if we're near a cache
-                navController.navigate(R.id.AR)
+                navController.navigate(R.id.cacheviewer_fragment)
             }
         }
 

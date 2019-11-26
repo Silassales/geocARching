@@ -13,18 +13,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.fragment.app.DialogFragment
 import androidx.navigation.findNavController
 
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 
-import com.porpoise.geocarching.Dialogs.AddMarkerFragment
 import com.porpoise.geocarching.Util.Constants.DEFAULT_CACHE_MARKER_SEARCH_RADIUS
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LAT
 import com.porpoise.geocarching.Util.Constants.DEFAULT_LONG
@@ -38,16 +35,13 @@ import com.porpoise.geocarching.Util.DegToUTM
 import com.porpoise.geocarching.firebaseObjects.Cache
 import org.imperiumlabs.geofirestore.GeoFirestore
 import org.imperiumlabs.geofirestore.GeoQuery
-import org.imperiumlabs.geofirestore.extension.setLocation
 import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
 import com.google.android.gms.maps.model.Marker
-import com.google.firebase.auth.FirebaseAuth
 import com.porpoise.geocarching.Util.Constants.DEFAULT_NEARBY_MARKER
 import com.porpoise.geocarching.Util.Constants.NEARBY_MARKER_MAP
 import com.porpoise.geocarching.Util.BitmapUtil.bitmapDescriptorFromVector
-import com.porpoise.geocarching.firebaseObjects.UserPlacedCache
 
-class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
+class MapsFragment : Fragment(), OnMapReadyCallback {
     private var fusedLocationProviderClient: FusedLocationProviderClient? = null
     private var locationCallback: LocationCallback? = null
     private var mMap: GoogleMap? = null
@@ -213,40 +207,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         }
     }
 
-    override fun onDialogPositiveClick(dialog: DialogFragment, cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
-        addPlacedCacheToFirebase(cacheName, cacheDesc, cacheModel, latLng)
-    }
-
-    private fun addPlacedCacheToFirebase(cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
-        var model = 1
-        when(cacheModel){
-            "Model 1" -> model = 1
-            "Model 2" -> model = 2
-            "Model 3" -> model = 3
-            "Model 4" -> model = 4
-        }
-
-        val newCache = Cache(GeoPoint(latLng.latitude, latLng.longitude),
-                date_placed = Timestamp.now(),
-                model = model,
-                name = cacheName,
-                description = cacheDesc)
-
-        val firestore = FirebaseFirestore.getInstance()
-        firestore.collection(getString(R.string.firebase_collection_caches)).add(newCache).addOnSuccessListener { addedCache ->
-            addPlacedCacheToCurrentUser(addedCache.id)
-            val geoFirestore = GeoFirestore(FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches)))
-
-            geoFirestore.setLocation(addedCache.id, GeoPoint(latLng.latitude, latLng.longitude)) { e ->
-                if(e != null) Log.d("addPlacedCacheToFirebase", "failed to add location to cache ${addedCache.id}, exception: ${e.message}")
-            }
-        }
-    }
-
-    override fun onDialogNegativeClick(dialog: DialogFragment) {
-        dialog.dismiss()
-    }
-
     private fun startLocationTracking() {
         mMap ?: Log.e("UpdateMapLocation", "null mMap")
         mMap?.isMyLocationEnabled = true
@@ -329,31 +289,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         fun onFragmentInteraction(uri: Uri)
-    }
-
-    private fun addPlacedCacheToCurrentUser(placedCacheId: String) {
-        // TODO this could be cleaned up and separated into parts
-        val auth = FirebaseAuth.getInstance()
-        val firestore = FirebaseFirestore.getInstance()
-        auth.currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).document(currentAuthUser.uid).get().addOnSuccessListener { currentUser ->
-                currentUser?.let { safeCurrentUser ->
-                    firestore.collection(getString(R.string.firebase_collection_caches)).document(placedCacheId).get().addOnSuccessListener { placedSnapshot ->
-                        val placedCache = placedSnapshot.toObject(Cache::class.java)
-                        placedCache ?: Log.d("addPlacedCacheToCurrentUser", "Couldn't populate fields from snapshot: {${placedSnapshot.id}")
-                        placedCache?.let { safePlacedCache ->
-                            Log.d("addPlacedCacheToCurrentUser", "user: $safeCurrentUser placed cache: ${safePlacedCache.name}")
-                            val userPlacedCache = UserPlacedCache(placedCache.name, placedCache.l, placedCache.g)
-                            firestore.collection(getString(R.string.firebase_collection_users))
-                                    .document(currentUser.id)
-                                    .collection(getString(R.string.firebase_collection_users_placed_caches))
-                                    .document(placedCacheId)
-                                    .set(userPlacedCache)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /*
