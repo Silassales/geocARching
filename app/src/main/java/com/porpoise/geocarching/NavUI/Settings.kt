@@ -1,5 +1,6 @@
 package com.porpoise.geocarching.NavUI
 
+import android.app.job.JobScheduler
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -11,6 +12,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CompoundButton
+import android.widget.Switch
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.porpoise.geocarching.R
@@ -61,6 +64,22 @@ class Settings : Fragment() {
             }
 
             startActivity(intent)
+        }
+        var notifOn = true
+        val sharedPref = context?.getSharedPreferences(getString(R.string.app_shared_pref), Context.MODE_PRIVATE)
+        sharedPref?.let { safeSP ->
+            notifOn = safeSP.getBoolean(getString(R.string.shared_pref_notif_on), true)
+        }
+        val notifSwitch = view.findViewById<Switch>(R.id.notif_switch)
+        notifSwitch.isChecked = notifOn
+        notifSwitch.setOnCheckedChangeListener { _, isChecked ->
+            sharedPref?.edit()?.putBoolean(getString(R.string.shared_pref_notif_on), isChecked)?.apply()
+            if(!isChecked) {
+                context?.let {safeContext ->
+                    val scheduler = safeContext.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+                    scheduler.cancel(Constants.NOTIFICATION_JOB_ID)
+                }
+            }
         }
 
         return view

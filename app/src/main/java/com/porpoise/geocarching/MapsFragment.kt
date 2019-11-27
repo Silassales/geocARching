@@ -100,11 +100,18 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
     }
 
     private fun startBackgroundLocationTracking() {
+        val sharedPref = context?.getSharedPreferences(getString(R.string.app_shared_pref), Context.MODE_PRIVATE)
+        sharedPref?.let { safeSP ->
+            if(!(safeSP.getBoolean(getString(R.string.shared_pref_notif_on), true))) {
+                return
+            }
+        }
+
         context?.let { safeContext ->
             val jobServiceComponent = ComponentName(safeContext, LocationNotificationJobService::class.java)
             val jobInfoBuilder = JobInfo.Builder(Constants.NOTIFICATION_JOB_ID, jobServiceComponent)
                     .setPeriodic(Constants.NOTIFICATION_REMINDER)
-                    //.setMinimumLatency(1000*15) left in so that we can demo it (this runs the job 15 secs after the start - min periodic is 15m)
+                    //.setMinimumLatency(1000*15) // left in so that we can demo it (this runs the job 15 secs after the start - min periodic is 15m)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setRequiresCharging(false)
                     .setRequiresDeviceIdle(false)
