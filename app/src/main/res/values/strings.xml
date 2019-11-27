@@ -37,9 +37,16 @@
     <string name="maps_fab_snackbar_unset_location_message">Finding user location…</string>
     <string name="maps_fab_snackbar_place_cache_message">There\'s no cache nearby…</string>
     <string name="maps_fab_snackbar_place_cache_option">PLACE CACHE</string>
+    <string name="ar_cloud_host_attempt">Attempting to place cache, please wait…</string>
+    <string name="ar_cloud_host_error">Unable to place cache, please try again later</string>
+    <string name="ar_cloud_resolve_error">We can\'t quite remember where this was placed - it must be an older cache!</string>
     <string name="ar_cache_dialog_unvisited">Congratulations, you\'ve found a cache!</string>
     <string name="ar_cache_dialog_visited">You\'ve already found this cache!</string>
-    <string name="ar_title">Cache Viewer</string>
+    <string name="ar_cacheviewer_title">Cache Viewer</string>
+    <string name="ar_cacheplacer_title">Cache Placer</string>
+    <string name="ar_cacheplacer_tapprompt">Tap a surface to place a cache!</string>
+    <string name="ar_cacheplacer_placesuccess_message">Congratulations, you\'ve placed a cache!</string>
+    <string name="ar_cacheplacer_placesuccess_option">RETURN TO MAP</string>
     <string name="cache_details_title">Cache Visits</string>
     <string name="firebase_users_level">level</string>
     <string name="no_users">Leaderboard is empty…</string>

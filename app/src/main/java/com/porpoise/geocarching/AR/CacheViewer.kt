@@ -1,4 +1,4 @@
-package com.porpoise.geocarching
+package com.porpoise.geocarching.AR
 
 import android.graphics.Color
 import android.os.Bundle
@@ -9,82 +9,89 @@ import android.view.View
 import android.view.ViewGroup
 
 import android.graphics.Point
-import android.net.Uri
 import android.util.Log
 import android.view.MotionEvent
 import com.github.jinatonic.confetti.CommonConfetti
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.android.synthetic.main.fragment_ar.view.*
+import kotlinx.android.synthetic.main.fragment_ar_cacheviewer.view.*
 
 import com.google.ar.core.*
-import com.google.ar.sceneform.AnchorNode
-import com.google.ar.sceneform.FrameTime
-import com.google.ar.sceneform.ux.ArFragment
-import com.google.ar.sceneform.ux.TransformableNode
-import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.SetOptions.merge
+import com.porpoise.geocarching.MapsFragment
+import com.porpoise.geocarching.R
 import com.porpoise.geocarching.Util.Constants
-import com.porpoise.geocarching.Util.Constants.DEFAULT_MODEL
-import com.porpoise.geocarching.Util.Constants.MODEL_MAP
 import com.porpoise.geocarching.Util.Leveling
 import com.porpoise.geocarching.firebaseObjects.Cache
 import com.porpoise.geocarching.firebaseObjects.User
 import com.porpoise.geocarching.firebaseObjects.UserVisit
 
-class AR : Fragment() {
-    private lateinit var arFragment: ArFragment
-    private lateinit var cacheRenderable: ModelRenderable
-    private var cacheAnchorNode: AnchorNode? = null
+class CacheViewer : Fragment() {
+    private var model: Int = 0
     private var isCacheVisited: Boolean = true
+    private lateinit var arHelper: ArHelper
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        val view: View = inflater.inflate(R.layout.fragment_ar, container, false)
+        val view: View = inflater.inflate(R.layout.fragment_ar_cacheviewer, container, false)
+        arHelper = ArHelper(view)
         val firestore = FirebaseFirestore.getInstance()
 
         // set the arFragment
-        arFragment = childFragmentManager.findFragmentById(R.id.ar_fragment) as? ArFragment ?: throw IllegalStateException("AR Fragment null onCreateView")
+        arHelper.setArFragment(childFragmentManager.findFragmentById(R.id.cacheviewer_ar_fragment))
 
         MapsFragment.nearbyCacheId?.let { documentId ->
             firestore.collection(getString(R.string.firebase_collection_caches)).document(documentId).get().addOnSuccessListener { cache ->
-                cache.toObject(Cache::class.java)?.let {safeCache ->
-                    // set the cache model
-                    ModelRenderable.builder()
-                        .setSource(arFragment.context, Uri.parse(MODEL_MAP[safeCache.model] ?: DEFAULT_MODEL))
-                        .build()
-                        .thenAccept { cacheRenderable = it }
-                        .exceptionally {
-                            Snackbar.make(view, it.message.toString(), Snackbar.LENGTH_LONG).show()
-                            return@exceptionally null
-                        }
+                cache.toObject(Cache::class.java)?.let { safeCache ->
+                    arHelper.resolveCloudAnchor(safeCache.cloudAnchorId)
+
+                    model = safeCache.model
+
+                    arHelper.setOnUpdate(::checkUpdatedAnchor)
                 }
             }
         }
 
-        // we want to try and place the cache at the centre on each update until it happens
-        arFragment.arSceneView.scene.addOnUpdateListener(this::placeCacheAtScreenCentre)
-
         getIsCacheVisited()
 
-        view.cache_details_fab.setOnClickListener{
-            MapsFragment.nearbyCacheId?.let {
-                firestore.collection(getString(R.string.firebase_collection_caches)).document(it).get().addOnSuccessListener { result ->
-                    this.context?.let { context ->
-                        val builder = AlertDialog.Builder(context)
-                        builder.setMessage(result.get("description").toString())
-                            .setTitle(result.get("name").toString())
-                        val dialog = builder.create()
-                        dialog.show()
+        view.cache_details_fab.setOnClickListener{ _ ->
+            MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
+                firestore.collection(getString(R.string.firebase_collection_caches)).document(nearbyCacheId).get().addOnSuccessListener { result ->
+                    result.toObject(Cache::class.java)?.let { safeCache ->
+                        this.context?.let { AlertDialog.Builder(it).setMessage(safeCache.description).setTitle(safeCache.name).create().show() }
                     }
                 }
             }
         }
 
         return view
+    }
+
+    @Synchronized
+    private fun checkUpdatedAnchor() {
+        if (arHelper.appAnchorState != AppAnchorState.HOSTING && arHelper.appAnchorState != AppAnchorState.RESOLVING) return
+
+        arHelper.anchor?.let {
+            val cloudState = it.cloudAnchorState
+
+            if (arHelper.appAnchorState == AppAnchorState.RESOLVING) {
+                if (cloudState.isError) {
+                    Snackbar.make(arHelper.view, getString(R.string.ar_cloud_resolve_error), Snackbar.LENGTH_LONG).show()
+
+                    arHelper.appAnchorState = AppAnchorState.NONE
+
+                    arHelper.setOnUpdate(::placeCacheAtScreenCentre)
+                } else if (cloudState == Anchor.CloudAnchorState.SUCCESS) {
+                    arHelper.appAnchorState = AppAnchorState.RESOLVED
+
+                    if (arHelper.isCacheInScene) return
+
+                    arHelper.placeCache(model, ::onTapCache)
+                }
+            }
+        }
     }
 
     private fun getIsCacheVisited() {
@@ -108,14 +115,11 @@ class AR : Fragment() {
         }
     }
 
-    private fun placeCacheAtScreenCentre(frameTime: FrameTime) {
-        // Let the fragment update its state first.
-        arFragment.onUpdate(frameTime)
-
-        arFragment.arSceneView.arFrame?.let { arFrame ->
+    private fun placeCacheAtScreenCentre() {
+        arHelper.arFragment.arSceneView.arFrame?.let { arFrame ->
             // If ARCore is not tracking yet, then don't process anything
             // attempt to place the anchor at the centre of the screen only if no anchor has been set
-            if (arFrame.camera.trackingState == TrackingState.TRACKING && cacheAnchorNode == null) {
+            if (arFrame.camera.trackingState == TrackingState.TRACKING && !arHelper.isCacheInScene) {
                 activity?.run {
                     val screenSize = Point()
                     windowManager.defaultDisplay.getSize(screenSize)
@@ -125,8 +129,9 @@ class AR : Fragment() {
                         val trackable = hit.trackable
 
                         if (trackable is Plane && trackable.isPoseInPolygon(hit.hitPose)) {
-                            setCacheAnchorNode(hit.createAnchor())
-                            placeCache()
+                            arHelper.cloudAnchor(hit.createAnchor())
+                            arHelper.setCacheAnchorNode()
+                            arHelper.placeCache(model, ::onTapCache)
 
                             break
                         }
@@ -136,30 +141,15 @@ class AR : Fragment() {
         }
     }
 
-    private fun setCacheAnchorNode(anchor: Anchor) {
-        cacheAnchorNode = AnchorNode(anchor)
-        arFragment.arSceneView.scene.addChild(cacheAnchorNode)
-    }
-
-    private fun placeCache() {
-        var transformableNode = TransformableNode(arFragment.transformationSystem)
-        transformableNode.renderable = cacheRenderable
-        transformableNode.setParent(cacheAnchorNode)
-        transformableNode.setOnTapListener { _, motionEvent -> onTapCache(motionEvent) }
-        transformableNode.select()
-    }
-
     private fun onTapCache(motionEvent: MotionEvent) {
         if (!isCacheVisited) {
             addVisitToCurrentUser(motionEvent)
-            addVisitToCurrentCache(motionEvent)
+            addVisitToCurrentCache()
 
             return
         }
 
-        this.view?.let {
-            Snackbar.make(it, R.string.ar_cache_dialog_visited, Snackbar.LENGTH_LONG).show()
-        }
+        this.view?.let { Snackbar.make(it, getString(R.string.ar_cache_dialog_visited), Snackbar.LENGTH_LONG).show() }
     }
 
     private fun addVisitToCurrentUser(motionEvent: MotionEvent) {
@@ -171,7 +161,7 @@ class AR : Fragment() {
             firestore.collection(getString(R.string.firebase_collection_users)).document(currentAuthUser.uid).get().addOnSuccessListener { currentUserSnapshot ->
                 val currentUser = currentUserSnapshot.toObject(User::class.java)
                 currentUser.let {
-                    MapsFragment.nearbyCacheId?.let {nearbyCacheId ->
+                    MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
                         firestore.collection(getString(R.string.firebase_collection_caches)).document(nearbyCacheId).get().addOnSuccessListener { visitedCacheSnapshot ->
                             val visitedCache = visitedCacheSnapshot.toObject(Cache::class.java)
                             val visitedCacheId = visitedCacheSnapshot.id
@@ -187,9 +177,7 @@ class AR : Fragment() {
                                     .addOnSuccessListener {
                                         triggerConfetti(motionEvent)
 
-                                        this.view?.let {
-                                            Snackbar.make(it, R.string.ar_cache_dialog_unvisited, Snackbar.LENGTH_LONG).show()
-                                        }
+                                        this.view?.let { Snackbar.make(it, getString(R.string.ar_cache_dialog_unvisited), Snackbar.LENGTH_LONG).show() }
 
                                         isCacheVisited = true
 
@@ -201,6 +189,18 @@ class AR : Fragment() {
                 }
             }
         }
+    }
+
+    private fun triggerConfetti(motionEvent: MotionEvent) {
+        val explosion = CommonConfetti.explosion(
+                view as ViewGroup,
+                motionEvent.x.toInt(), motionEvent.y.toInt(),
+                intArrayOf(Color.YELLOW, Color.LTGRAY, Color.GREEN, Color.MAGENTA))
+
+        explosion.confettiManager
+                .setTTL(2000)
+
+        explosion.stream(1000)
     }
 
     private fun addXPToCurrentUser(amount: Long) {
@@ -223,7 +223,7 @@ class AR : Fragment() {
                                 firestore.collection(getString(R.string.firebase_collection_users))
                                         .document(currentUserId)
                                         .update(getString(R.string.firebase_collection_users_level), newLevel).addOnSuccessListener {
-                                            view?.let{ safeView -> Snackbar.make(safeView, getString(R.string.level_up_snacker_bar_message, newLevel), Snackbar.LENGTH_LONG).show() }
+                                            Snackbar.make(arHelper.view, getString(R.string.level_up_snacker_bar_message, newLevel), Snackbar.LENGTH_LONG).show()
                                         }
                             }
                         }
@@ -231,7 +231,7 @@ class AR : Fragment() {
         }
     }
 
-    private fun addVisitToCurrentCache(motionEvent: MotionEvent) {
+    private fun addVisitToCurrentCache() {
         val firestore = FirebaseFirestore.getInstance()
 
         FirebaseAuth.getInstance().currentUser?.let { currentAuthUser ->
@@ -239,25 +239,13 @@ class AR : Fragment() {
                 currentUser?.let {
                     MapsFragment.nearbyCacheId?.let { nearbyCacheId ->
                         firestore.collection(getString(R.string.firebase_collection_caches))
-                                .document(nearbyCacheId)
-                                .collection(getString(R.string.firebase_collection_cache_visits))
-                                .document(currentUser.id)
-                                .set(hashMapOf(getString(R.string.default_username) to currentUser.getString(getString(R.string.default_username))))
+                            .document(nearbyCacheId)
+                            .collection(getString(R.string.firebase_collection_cache_visits))
+                            .document(currentUser.id)
+                            .set(hashMapOf(getString(R.string.default_username) to currentUser.getString(getString(R.string.default_username))))
                     }
                 }
             }
         }
-    }
-
-    private fun triggerConfetti(motionEvent: MotionEvent) {
-        val explosion = CommonConfetti.explosion(
-                view as ViewGroup,
-                motionEvent.x.toInt(), motionEvent.y.toInt(),
-                intArrayOf(Color.YELLOW, Color.LTGRAY, Color.GREEN, Color.MAGENTA))
-
-        explosion.confettiManager
-                .setTTL(2000)
-
-        explosion.stream(1000)
     }
 }

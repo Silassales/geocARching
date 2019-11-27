@@ -3,10 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AR">
+    tools:context=".AR.CacheViewer">
 
-    <fragment android:name="com.google.ar.sceneform.ux.ArFragment"
-        android:id="@+id/ar_fragment"
+    <fragment android:name="com.porpoise.geocarching.AR.CloudAnchorFragment"
+        android:id="@+id/cacheviewer_ar_fragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

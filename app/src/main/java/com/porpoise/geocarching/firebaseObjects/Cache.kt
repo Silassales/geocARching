@@ -13,4 +13,5 @@ data class Cache(val ar_cord: GeoPoint =  GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
                  val model: Int = 1,
                  val name: String = "",
                  val l: GeoPoint =  GeoPoint(DEFAULT_LAT, DEFAULT_LONG),
-                 val g: String = "")
+                 val g: String = "",
+                 val cloudAnchorId: String = "")
