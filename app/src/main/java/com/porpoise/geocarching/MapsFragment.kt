@@ -1,9 +1,14 @@
 package com.porpoise.geocarching
 
 import android.Manifest
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
@@ -42,9 +47,12 @@ import org.imperiumlabs.geofirestore.extension.setLocation
 import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
 import com.google.android.gms.maps.model.Marker
 import com.google.firebase.auth.FirebaseAuth
+import com.porpoise.geocarching.BackgroundLocation.LocationNotificationJobService
 import com.porpoise.geocarching.Util.Constants.DEFAULT_NEARBY_MARKER
 import com.porpoise.geocarching.Util.Constants.NEARBY_MARKER_MAP
 import com.porpoise.geocarching.Util.BitmapUtil.bitmapDescriptorFromVector
+import com.porpoise.geocarching.Util.Constants
+import com.porpoise.geocarching.Util.Constants.MY_PERMISSIONS_REQUEST_ACCESS_BACKGROUND_LOCATION
 import com.porpoise.geocarching.firebaseObjects.UserPlacedCache
 
 class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarkerDialogListener {
@@ -72,6 +80,12 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             createViewWithPermissions()
         }
 
+        if(!checkBackgroundLocationPermissions()) {
+            requestBackgroundLocationPermissionsAccess()
+        } else {
+            startBackgroundLocationTracking()
+        }
+
         return view
     }
 
@@ -85,9 +99,36 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         mapsFragment.getMapAsync(this)
     }
 
+    private fun startBackgroundLocationTracking() {
+        context?.let { safeContext ->
+            val jobServiceComponent = ComponentName(safeContext, LocationNotificationJobService::class.java)
+            val jobInfoBuilder = JobInfo.Builder(Constants.NOTIFICATION_JOB_ID, jobServiceComponent)
+                    .setPeriodic(Constants.NOTIFICATION_REMINDER)
+                    //.setMinimumLatency(1000*15) left in so that we can demo it (this runs the job 15 secs after the start - min periodic is 15m)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setRequiresCharging(false)
+                    .setRequiresDeviceIdle(false)
+
+            val scheduler = safeContext.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+
+            /*
+                If try to schedule the job and it is already pending it will be replaced with a new
+                job, which will be bad in our case because the period is 1 day, and if the user opens
+                the app at any point during the day, the job will be rescheduled for the next day and
+                the notification will never fire until the user doesn't user the app for a day
+             */
+            var jobCurrentlyScheduled = false
+            for (job in scheduler.allPendingJobs) {
+                if(job.id == Constants.NOTIFICATION_JOB_ID) {
+                    jobCurrentlyScheduled = true
+                }
+            }
+            if(!jobCurrentlyScheduled) scheduler.schedule(jobInfoBuilder.build())
+        }
+    }
+
     override fun onPause() {
         super.onPause()
-
         // we don't want to be update the user location if they close the app
         fusedLocationProviderClient?.removeLocationUpdates(locationCallback)
         geoQuery?.removeAllListeners()
@@ -367,9 +408,26 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         return false
     }
 
+    private fun checkBackgroundLocationPermissions() : Boolean {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            context?.let { return (ContextCompat.checkSelfPermission(it, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) }
+        } else { // if they are on < Q we don't need this permission to get background location
+            return true
+        }
+        // if context is null we have bigger issues than permissions
+        return false
+    }
+
     private fun requestPermissionsAccess() {
         // In the future we may want to add prompts for the users to know why we need these permissions
         requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), MY_PERMISSIONS_REQUEST_ACCESS_LOCATION)
+    }
+
+    private fun requestBackgroundLocationPermissionsAccess() {
+        // In the future we may want to add prompts for the users to know why we need these permissions
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), MY_PERMISSIONS_REQUEST_ACCESS_BACKGROUND_LOCATION)
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -383,6 +441,11 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
                     activity?.finishAndRemoveTask()
                 } else {
                     createViewWithPermissions()
+                }
+            }
+            MY_PERMISSIONS_REQUEST_ACCESS_BACKGROUND_LOCATION -> {
+                if(!(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED)) {
+                    startBackgroundLocationTracking()
                 }
             }
         }

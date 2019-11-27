@@ -7,6 +7,7 @@ import kotlin.math.round
 import kotlin.math.sqrt
 
 object Constants {
+
     // Guelph
     const val DEFAULT_LAT = 43.544804
     const val DEFAULT_LONG = -80.248169
@@ -50,6 +51,7 @@ object Constants {
 
     // this is just to track which permission was request from onRequestPermissionsResult
     const val MY_PERMISSIONS_REQUEST_ACCESS_LOCATION = 1
+    const val MY_PERMISSIONS_REQUEST_ACCESS_BACKGROUND_LOCATION = 2
 
     const val NEARBY_CACHE_DISTANCE = 10.0
 
@@ -58,6 +60,9 @@ object Constants {
     const val STARTING_LEVEL = 0
     const val STARTING_EXPERIENCE = 0
     const val DEFAULT_CACHE_VISIT_XP = 50L
+
+    const val NOTIFICATION_REMINDER = 1000*60*60*24L // 1 day in ms
+    const val NOTIFICATION_JOB_ID = -1
 }
 
 class Leveling {
