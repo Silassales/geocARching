@@ -3,6 +3,7 @@ package com.porpoise.geocarching.BackgroundLocation
 import android.app.PendingIntent
 import android.app.job.JobParameters
 import android.app.job.JobService
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -19,6 +20,14 @@ import org.imperiumlabs.geofirestore.listeners.GeoQueryEventListener
 class LocationNotificationJobService : JobService() {
 
     override fun onStartJob(params: JobParameters?): Boolean {
+        //check if we should be sending notif
+        val sharedPref = applicationContext?.getSharedPreferences(getString(R.string.app_shared_pref), Context.MODE_PRIVATE)
+        sharedPref?.let { safeSP ->
+            if(!(safeSP.getBoolean(getString(R.string.shared_pref_notif_on), true))) {
+                return true
+            }
+        }
+
         LocationServices.getFusedLocationProviderClient(applicationContext).lastLocation.addOnSuccessListener {location ->
             val ref = FirebaseFirestore.getInstance().collection(getString(R.string.firebase_collection_caches))
             val geoFire = GeoFirestore(ref)
