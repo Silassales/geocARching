@@ -1,5 +1,8 @@
 package com.porpoise.geocarching
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -89,6 +92,23 @@ class MainActivity : AppCompatActivity(), MapsFragment.OnFragmentInteractionList
             } else {
                 floatingActionButton.show()
             }
+        }
+
+        // create a notif channel for any future notifications we are going to send
+        /*
+            From docs
+            Because you must create the notification channel before posting any notifications on
+            Android 8.0 and higher, you should execute this code as soon as your app starts.
+            It's safe to call this repeatedly because creating an existing notification channel
+            performs no operation.
+         */
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(getString(R.string.notif_channel_name),
+                    getString(R.string.notif_name),
+                    NotificationManager.IMPORTANCE_DEFAULT)
+            channel.description = getString(R.string.notif_desc)
+            val mNotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            mNotificationManager.createNotificationChannel(channel)
         }
     }
 
