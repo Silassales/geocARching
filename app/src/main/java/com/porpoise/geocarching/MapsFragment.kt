@@ -60,8 +60,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         var userLocation: Location? = null
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view: View = inflater.inflate(R.layout.fragment_maps, container, false)
 
         // first thing we wanna do is check permissions access
@@ -114,11 +113,8 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             uiSettings.isScrollGesturesEnabled = false
             uiSettings.isMapToolbarEnabled = false
 
-            /* this NEEDS to be called before [addCacheMarkerListeners] and [startLocationTracking] */
             mMap = safeGMap
-
             addCacheMarkerListeners()
-
             startLocationTracking()
         }
     }
@@ -131,9 +127,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             val geoFire = GeoFirestore(ref)
 
             geoQuery = geoFire.queryAtLocation(GeoPoint(DEFAULT_LAT, DEFAULT_LONG), DEFAULT_CACHE_MARKER_SEARCH_RADIUS)
-
             geoQuery?.addGeoQueryEventListener(object : GeoQueryEventListener {
-
                 override fun onKeyMoved(documentID: String, location: GeoPoint) {
                     mMap?.let { safeMap ->
                         Log.d("cacheOnKeyMoved", "cache with ID $documentID  moved to $location ")
@@ -200,13 +194,18 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
 
     private fun updateMarkerIcon(documentID: String, marker: Marker?, nearby: Boolean) {
         val firestore = FirebaseFirestore.getInstance()
-        firestore.collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener {cache ->
+        firestore.collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener { cache ->
             cache.toObject(Cache::class.java)?.let { safeCache ->
                 context?.let {safeContext ->
-                    if(nearby) {
-                        marker?.setIcon(bitmapDescriptorFromVector(safeContext, NEARBY_MARKER_MAP[safeCache.model] ?: DEFAULT_NEARBY_MARKER))
-                    } else {
-                        marker?.setIcon(bitmapDescriptorFromVector(safeContext, MARKER_MAP[safeCache.model] ?: DEFAULT_MARKER))
+                    try {
+                        if(nearby) {
+                            marker?.setIcon(bitmapDescriptorFromVector(safeContext, NEARBY_MARKER_MAP[safeCache.model] ?: DEFAULT_NEARBY_MARKER))
+                        } else {
+                            marker?.setIcon(bitmapDescriptorFromVector(safeContext, MARKER_MAP[safeCache.model] ?: DEFAULT_MARKER))
+                        }
+                    }
+                    catch (e: IllegalArgumentException) {
+                        Log.d("SetIconFailure", marker.toString())
                     }
                 }
             }
@@ -219,7 +218,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
 
     private fun addPlacedCacheToFirebase(cacheName: String, cacheDesc: String, cacheModel: String, latLng: LatLng) {
         var model = 1
-        when(cacheModel){
+        when(cacheModel) {
             "Model 1" -> model = 1
             "Model 2" -> model = 2
             "Model 3" -> model = 3
@@ -274,37 +273,44 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         updateCacheMarkerListeners(location)
 
         userLocation = Location(location)
-
         setNearbyCache(location)
     }
 
     private fun setNearbyCache(location: Location) {
-        // reset, as there isn't always a nearby cache
-        nearbyCacheId = null
-
         var nearestMarker: Marker? = null
         var nearestMarkerId: String? = null
         var nearestDistance = NEARBY_CACHE_DISTANCE // must be at least nearer than NEARBY_CACHE_DISTANCE
 
         for(marker in markerMap) {
             val distance = DegToUTM.distanceBetweenDeg(location.latitude, location.longitude, marker.value.position.latitude, marker.value.position.longitude)
-
-            // reset the icon colour
-            updateMarkerIcon(marker.key, marker.value, nearby = false)
-
-            if (distance < nearestDistance) {
+            if(distance < nearestDistance) {
                 nearestMarker = marker.value
                 nearestMarkerId = marker.key
                 nearestDistance = distance
             }
         }
 
-        // if there's a nearby cache, set it
         nearestMarker?.let {
-            nearbyCacheId = nearestMarkerId
+            // highlight the nearby cache if it isn't the same
+            nearestMarkerId?.let {
+                if(nearbyCacheId != nearestMarkerId) {
+                    // reset all markers before setting a new one green
+                    for(marker in markerMap) {
+                        updateMarkerIcon(marker.key, marker.value, nearby = false)
+                    }
 
-            // highlight the nearby cache
-            nearestMarkerId?.let { updateMarkerIcon(nearestMarkerId, nearestMarker, nearby = true) }
+                    updateMarkerIcon(it, nearestMarker, nearby = true)
+                }
+            }
+
+            nearbyCacheId = nearestMarkerId
+        } ?: run {
+            // reset, as there isn't always a nearby cache
+            for(marker in markerMap) {
+                updateMarkerIcon(marker.key, marker.value, nearby = false)
+            }
+
+            nearbyCacheId = null
         }
     }
 
@@ -335,22 +341,17 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         // TODO this could be cleaned up and separated into parts
         val auth = FirebaseAuth.getInstance()
         val firestore = FirebaseFirestore.getInstance()
+
         auth.currentUser?.let { currentAuthUser ->
-            firestore.collection(getString(R.string.firebase_collection_users)).document(currentAuthUser.uid).get().addOnSuccessListener { currentUser ->
-                currentUser?.let { safeCurrentUser ->
-                    firestore.collection(getString(R.string.firebase_collection_caches)).document(placedCacheId).get().addOnSuccessListener { placedSnapshot ->
-                        val placedCache = placedSnapshot.toObject(Cache::class.java)
-                        placedCache ?: Log.d("addPlacedCacheToCurrentUser", "Couldn't populate fields from snapshot: {${placedSnapshot.id}")
-                        placedCache?.let { safePlacedCache ->
-                            Log.d("addPlacedCacheToCurrentUser", "user: $safeCurrentUser placed cache: ${safePlacedCache.name}")
-                            val userPlacedCache = UserPlacedCache(placedCache.name, placedCache.l, placedCache.g)
-                            firestore.collection(getString(R.string.firebase_collection_users))
-                                    .document(currentUser.id)
-                                    .collection(getString(R.string.firebase_collection_users_placed_caches))
-                                    .document(placedCacheId)
-                                    .set(userPlacedCache)
-                        }
-                    }
+            firestore.collection(getString(R.string.firebase_collection_caches)).document(placedCacheId).get().addOnSuccessListener { placedSnapshot ->
+                val placedCache = placedSnapshot.toObject(Cache::class.java)
+                placedCache?.let { safePlacedCache ->
+                    val userPlacedCache = UserPlacedCache(safePlacedCache.name, safePlacedCache.l, safePlacedCache.g)
+                    firestore.collection(getString(R.string.firebase_collection_users))
+                            .document(currentAuthUser.uid)
+                            .collection(getString(R.string.firebase_collection_users_placed_caches))
+                            .document(placedCacheId)
+                            .set(userPlacedCache)
                 }
             }
         }
@@ -387,6 +388,5 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
             }
         }
     }
-
 }
 
