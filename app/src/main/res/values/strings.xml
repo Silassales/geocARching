@@ -67,6 +67,13 @@
     <string name="developer_email">withoutporpoisecis4250@gmail.com</string>
     <string name="report_cache_email_subject">REPORT CACHE: %s</string>
     <string name="report_cache_body">Reporting cache [%s]. \n \n Comments:\n%s</string>
+    <string name="notif_channel_name">BACKGROUND_LOCATION_CHANNEL</string>
+    <string name="notif_name">GeocARching</string>
+    <string name="notif_desc">GeocARching notifications</string>
+    <string name="background_location_notif_title">Nearby Caches!</string>
+    <string name="background_location_notif_content">There are %s caches nearby! Come check them out</string>
+    <string name="app_shared_pref">com.porpoise.geocarching</string>
+    <string name="shared_pref_notif_on">com.porpoise.geocarching.notifications</string>
 
     <string-array name="cache_model_array">
         <item>Model 1</item>
