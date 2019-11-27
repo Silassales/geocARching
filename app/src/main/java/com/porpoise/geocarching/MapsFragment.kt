@@ -197,10 +197,15 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         firestore.collection(getString(R.string.firebase_collection_caches)).document(documentID).get().addOnSuccessListener { cache ->
             cache.toObject(Cache::class.java)?.let { safeCache ->
                 context?.let {safeContext ->
-                    if(nearby) {
-                        marker?.setIcon(bitmapDescriptorFromVector(safeContext, NEARBY_MARKER_MAP[safeCache.model] ?: DEFAULT_NEARBY_MARKER))
-                    } else {
-                        marker?.setIcon(bitmapDescriptorFromVector(safeContext, MARKER_MAP[safeCache.model] ?: DEFAULT_MARKER))
+                    try {
+                        if(nearby) {
+                            marker?.setIcon(bitmapDescriptorFromVector(safeContext, NEARBY_MARKER_MAP[safeCache.model] ?: DEFAULT_NEARBY_MARKER))
+                        } else {
+                            marker?.setIcon(bitmapDescriptorFromVector(safeContext, MARKER_MAP[safeCache.model] ?: DEFAULT_MARKER))
+                        }
+                    }
+                    catch (e: IllegalArgumentException) {
+                        Log.d("SetIconFailure", marker.toString())
                     }
                 }
             }
@@ -268,7 +273,6 @@ class MapsFragment : Fragment(), OnMapReadyCallback, AddMarkerFragment.AddMarker
         updateCacheMarkerListeners(location)
 
         userLocation = Location(location)
-
         setNearbyCache(location)
     }
 
